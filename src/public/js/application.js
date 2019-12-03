@@ -1,5 +1,5 @@
 class GridApplication {
-    constructor(PIXI, width, height, pointEvent, helperCalculus, interaction = true, scale) {
+    constructor(PIXI, width, height, pointEvent, helperCalculus, interaction = true, scale, color=0x650A5A) {
 
         this.width = width;
         this.height = height;
@@ -19,6 +19,7 @@ class GridApplication {
         this.helperCalculus = helperCalculus;
         this.scale = scale;
         this.otherPolygons = [];
+        this.color = color;
 
         this.style = new PIXI.TextStyle({
             fontFamily: 'Arial',
@@ -69,7 +70,7 @@ class GridApplication {
             this.polygon = new PIXI.Graphics();
 
             beginFill();
-            this.polygon.lineStyle(2, 0xFF00FF, 1);
+            this.polygon.lineStyle(2, this.color, 1);
             this.polygon.moveTo(this.pointsGraphic[0].x, this.pointsGraphic[0].y);
             this.pointsGraphic.slice(1, this.pointsGraphic.length).forEach(point => {
                 this.polygon.lineTo(point.x, point.y);
@@ -102,7 +103,7 @@ class GridApplication {
             if (this._closePolygon(point)) {
                 this._createPolygon(
                     () => this.polygon.closePath(),
-                    () => this.polygon.beginFill(0x650A5A, 0.25),
+                    () => this.polygon.beginFill(this.color, 0.25),
                     () => this.polygon.endFill());
                 this.shouldStopDrawingPoints = true;
                 this.polygonIsClosed = true;
@@ -111,6 +112,11 @@ class GridApplication {
                 this._createPolygon();
             }
         }
+    }
+
+    removePolygon(poly) {
+        poly.destroy();
+        this.app.stage.removeChild(poly);
     }
 
     addPolygon(points, colorLine, colorPoints, radiusPoint) {
@@ -168,7 +174,7 @@ class GridApplication {
                 .on('pointermove', this.pointEvent.onPointDragMove)
                 .on('pointermove', this._updateGraphs.bind(this));
         pointGraphic.lineStyle(0);
-        pointGraphic.beginFill(0xDE3249, 1);
+        pointGraphic.beginFill(this.color, 1);
         pointGraphic.drawCircle(0, 0, 8);
         pointGraphic.x = point.x;
         pointGraphic.y = point.y;
@@ -216,7 +222,7 @@ class GridApplication {
             if (this.polygonIsClosed) {
                 this._createPolygon(
                     () => this.polygon.closePath(),
-                    () => this.polygon.beginFill(0x650A5A, 0.25),
+                    () => this.polygon.beginFill(this.color, 0.25),
                     () => this.polygon.endFill());
             } else {
                 this._createPolygon();

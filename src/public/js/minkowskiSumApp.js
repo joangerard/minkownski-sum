@@ -66,13 +66,64 @@ class MinkowskiSumApp {
         let deplacedPoly = this.helperCalculus.deplacePoints(
             polygonRNotInverted,
             polygonResultPoints[0]);
-        deplacedPoly = this.helperCalculus.getCanvasCoordinatesList(
+        let deplacedPolyCanvas = this.helperCalculus.getCanvasCoordinatesList(
                 deplacedPoly,
-                this.width,
+                this.width, 
                 this.height,
                 this.scale
-                );
-        this.resultPolygon.addPolygon(deplacedPoly, 0x0000ff, 0x0000ff, 0.25);
-        
+                );  
+        let animatedPolygon = this.resultPolygon.addPolygon(deplacedPolyCanvas, 0x0000ff, 0x0000ff, 0.25);
+
+        let index = 0;
+        let index1 = 1;
+        let count = 0;
+
+        this.resultPolygon.app.ticker.add(() => {
+            // calculate the line equation between one point and the next one.
+            let m = (polygonResultPoints[index1].y - polygonResultPoints[index].y) / (polygonResultPoints[index1].x - polygonResultPoints[index].x);
+            let b = polygonResultPoints[index].y - m * polygonResultPoints[index].x
+            let delta = 100;
+            let deltaX = (polygonResultPoints[index1].x - polygonResultPoints[index].x)/delta;
+            let x_init = polygonResultPoints[index].x;
+
+            // at each tick get the x/and y that is bounded by the polygon
+            let x = x_init + count * deltaX;
+            let y = m * x + b;
+
+            // create new point that will be the new center of the deplaced polygon
+            let newPoint = new Point(x, y);
+            if (count < delta) {
+                // remove previous polygon from grid
+                this.resultPolygon.removePolygon(animatedPolygon);
+                let deplacedPoly = this.helperCalculus.deplacePoints(
+                    polygonRNotInverted,
+                    newPoint);
+                let deplacedPolyCanvas = this.helperCalculus.getCanvasCoordinatesList(
+                        deplacedPoly,
+                        this.width, 
+                        this.height,
+                        this.scale
+                        );
+                // deplace polygon
+                animatedPolygon = this.resultPolygon.addPolygon(deplacedPolyCanvas, 0x0000ff, 0x0000ff, 0.25);
+                count++;
+            } else if(index === polygonResultPoints.length - 2){
+                // do all the same operations with the last point and the first one.
+                index = polygonResultPoints.length - 1;
+                index1 = 0;
+                count = 0;
+            } else if(index === polygonResultPoints.length - 1){
+                // the polygon has turned around so start again
+                index = 0;
+                index1 = 1;
+                count = 0;
+            } else {
+                // now calculate from next points.
+                index++;
+                index1++;
+                count = 0;
+            }
+        });
+                
     }
 }
