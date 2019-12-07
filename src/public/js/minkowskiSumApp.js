@@ -62,7 +62,7 @@ class MinkowskiSumApp {
             ))
         
         // add Q polygon to app
-        this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x00ff00, 0x00ff00, 0.25)
+        this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x00ff00, 0x00ff00, 0.25);
         let deplacedPoly = this.helperCalculus.deplacePoints(
             polygonRNotInverted,
             polygonResultPoints[0]);
@@ -124,6 +124,101 @@ class MinkowskiSumApp {
                 count = 0;
             }
         });
-                
+    }
+    linearAlgo(){
+        let pPolygonPosCoord = this.helperCalculus.getPositionCoordinatesList(
+            this.sourcePolygonR.getPoints(),
+            this.width,
+            this.height,
+            this.scale
+        );
+
+        let rPolygonPosCoord = this.helperCalculus.getPositionCoordinatesList(
+            this.sourcePolygonQ.getPoints(),
+            this.width,
+            this.height,
+            this.scale
+        );
+
+        // triangulate polygon R
+        let copyR = this.polygonOperationHelper.copyPoints(this.sourcePolygonR.getPoints());
+        if (this.polygonOperationHelper.isClockWise(copyR)) {
+            // make it anti clockwise
+            copyR = copyR.reverse();
+        }
+        let trianglesR = this.polygonOperationHelper.triangulatePoly(copyR, []);
+        this.sourcePolygonR.addTriangles(trianglesR, 0xAA00BB);
+
+        // triangulate polygon Q
+        // let copyQ = this.polygonOperationHelper.copyPoints(this.sourcePolygonQ.getPoints());
+        // if (this.polygonOperationHelper.isClockWise(copyQ)) {
+        //     // make it anti clockwise
+        //     copyQ = copyQ.reverse();
+        // }
+        // let trianglesQ = this.polygonOperationHelper.triangulatePoly(copyQ, []);
+        // this.sourcePolygonQ.addTriangles(trianglesQ, 0xAA00BB);
+
+        // minkownski sum 
+        trianglesR.forEach((triangle) => {
+            let polygonResult = this.polygonOperationHelper.minkownskiSumLinearAlgo(
+                this.helperCalculus.getPositionCoordinatesList(triangle.getPoints(), this.width, this.height, this.scale),
+                rPolygonPosCoord);
+
+            polygonResult = this.helperCalculus.getCanvasCoordinatesList(polygonResult, this.width, this.height, this.scale);
+            
+            this.resultPolygon.addPolygon(polygonResult, 0x00ff00, 0x00ff00, 0.25);
+        });
+
+        this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);    
+    }
+
+    linearAlgoNonConvex(){
+        let pPolygonPosCoord = this.helperCalculus.getPositionCoordinatesList(
+            this.sourcePolygonR.getPoints(),
+            this.width,
+            this.height,
+            this.scale
+        );
+
+        let rPolygonPosCoord = this.helperCalculus.getPositionCoordinatesList(
+            this.sourcePolygonQ.getPoints(),
+            this.width,
+            this.height,
+            this.scale
+        );
+
+        // triangulate polygon R
+        let copyR = this.polygonOperationHelper.copyPoints(this.sourcePolygonR.getPoints());
+        if (this.polygonOperationHelper.isClockWise(copyR)) {
+            // make it anti clockwise
+            copyR = copyR.reverse();
+        }
+        let trianglesR = this.polygonOperationHelper.triangulatePoly(copyR, []);
+        this.sourcePolygonR.addTriangles(trianglesR, 0xAA00BB);
+
+        // triangulate polygon Q
+        let copyQ = this.polygonOperationHelper.copyPoints(this.sourcePolygonQ.getPoints());
+        if (this.polygonOperationHelper.isClockWise(copyQ)) {
+            // make it anti clockwise
+            copyQ = copyQ.reverse();
+        }
+        let trianglesQ = this.polygonOperationHelper.triangulatePoly(copyQ, []);
+        this.sourcePolygonQ.addTriangles(trianglesQ, 0xAA00BB);
+
+        // minkownski sum 
+        let polygonsMS = []
+        trianglesR.forEach((triangleR) => {
+            trianglesQ.forEach((triangleQ) => {
+                let polygonResult = this.polygonOperationHelper.minkownskiSumLinearAlgo(
+                    this.helperCalculus.getPositionCoordinatesList(triangleR.getPoints(), this.width, this.height, this.scale),
+                    this.helperCalculus.getPositionCoordinatesList(triangleQ.getPoints(), this.width, this.height, this.scale));
+    
+                polygonResult = this.helperCalculus.getCanvasCoordinatesList(polygonResult, this.width, this.height, this.scale);
+                polygonsMS.push(polygonResult);
+                this.resultPolygon.addPolygon(polygonResult, 0x00ff00, 0x00ff00, 0.25);
+            });
+        });
+
+        this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);    
     }
 }

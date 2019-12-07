@@ -10,7 +10,8 @@ class GridApplication {
         // points generator
         this.pointsGraphic = [];
         this.polygon = new PIXI.Graphics();
-        this.limitClosestPoint = 20;
+        this.path = new PIXI.Graphics();
+        this.limitClosestPoint = 6;
         this.shouldStopDrawingPoints = false;
         this.polygonIsClosed = false;
         this.dragPoint = false;
@@ -70,7 +71,7 @@ class GridApplication {
             this.polygon = new PIXI.Graphics();
 
             beginFill();
-            this.polygon.lineStyle(2, this.color, 1);
+            this.polygon.lineStyle(1, this.color, 1);
             this.polygon.moveTo(this.pointsGraphic[0].x, this.pointsGraphic[0].y);
             this.pointsGraphic.slice(1, this.pointsGraphic.length).forEach(point => {
                 this.polygon.lineTo(point.x, point.y);
@@ -123,7 +124,7 @@ class GridApplication {
         let polygon = new PIXI.Graphics();
         
         polygon.beginFill(colorPoints, radiusPoint);
-        polygon.lineStyle(2, colorLine, 1);
+        polygon.lineStyle(1, colorLine, 1);
 
         polygon.moveTo(points[0].x, points[0].y);
         points.slice(1, points.length).forEach(point => {
@@ -135,6 +136,18 @@ class GridApplication {
         this.otherPolygons.push(polygon);
         
         return polygon;
+    }
+
+    addTriangles(triangles, color) {
+        for(let i = 0; i < triangles.length; i++) {
+            this.path.lineStyle(2, color, 1);
+            this.path.moveTo(triangles[i].a.x, triangles[i].a.y);
+            this.path.lineTo(triangles[i].b.x, triangles[i].b.y);
+            this.path.lineTo(triangles[i].c.x, triangles[i].c.y);
+            this.path.lineTo(triangles[i].a.x, triangles[i].a.y);
+        }
+
+        this.app.stage.addChild(this.path);
     }
 
     getPoints() {
@@ -175,7 +188,7 @@ class GridApplication {
                 .on('pointermove', this._updateGraphs.bind(this));
         pointGraphic.lineStyle(0);
         pointGraphic.beginFill(this.color, 1);
-        pointGraphic.drawCircle(0, 0, 8);
+        pointGraphic.drawCircle(0, 0, 4);
         pointGraphic.x = point.x;
         pointGraphic.y = point.y;
         pointGraphic.endFill();
