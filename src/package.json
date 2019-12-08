@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "avl": "^1.4.4",
     "express": "^4.17.1",
     "http-server": "^0.11.1",
     "pixi": "^0.3.1",

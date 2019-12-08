@@ -218,7 +218,7 @@ class MinkowskiSumApp {
                 this.resultPolygon.addPolygon(polygonResult, 0x00ff00, 0x00ff00, 0.25);
             });
         });
-
+        
         this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);    
     }
 }
