@@ -123,11 +123,32 @@ class PolyUnionBuilder {
     }
 
     _pushIntersectionSegmentsInto(queue, s1, s2, id) {
-        if (s1 && s1.data.id != id && this._segmentIntersection(s1.key, s2.key)) {
+        if (s1 && s2 && s1.data.id != id && this._segmentIntersection(s1.key, s2.key)) {
             let s1Copy = JSON.parse(JSON.stringify(s1.key));
             let s2Copy = JSON.parse(JSON.stringify(s2.key));
             queue.push(s1Copy, s2Copy);
         }
+    }
+    
+    _getAboveBelowSegments(s1, s2, s1id, s2id) {
+        let sAbove = null;
+        let sBelow = null;
+        let idAbove = null;
+        let idBelow = null;
+
+        if (this._comparatorSegments(s1, s2) < 0) {
+            sAbove = s1;
+            sBelow = s2;
+            idAbove = s1id;
+            idBelow = s2id;
+        } else {
+            sBelow = s1;
+            sAbove = s2;
+            idBelow = s1id;
+            idAbove = s2id;
+        }
+
+        return [sAbove, sBelow, idAbove, idBelow];
     }
 
     swapLineSegmentsIntersectionAlgo(polyA, polyB) {
@@ -149,6 +170,7 @@ class PolyUnionBuilder {
             
             // vertex corresponds to a new vertex of polygon
             if (p && p2 && p.type === POINT_LEFT && p2.type === POINT_LEFT) {
+                console.log('left-left');
                 this.lastEvent.point.x += 0.1;
                 this.lineStatus.insert(p.segments[0], p.id);
                 this.lineStatus.insert(p2.segments[0], p.id);
@@ -156,28 +178,23 @@ class PolyUnionBuilder {
                 let sBelow = null;
                 let idAbove = null;
                 let idBelow = null;
-
-                if (p.segments[0].b.y < p2.segments[0].b.y) {
-                    sAbove = p.segments[0];
-                    sBelow = p2.segments[0];
-                    idAbove = p.id;
-                    idBelow = p2.id;
-                } else {
-                    sBelow = p.segments[0];
-                    sAbove = p2.segments[0];
-                    idBelow = p.id;
-                    idAbove = p2.id;
-                }
+                [sAbove, sBelow, idAbove, idBelow] = this._getAboveBelowSegments(
+                    p.segments[0],
+                    p2.segments[0],
+                    p.id,
+                    p2.id);
 
                 let s = this.lineStatus.find(sAbove);
                 let sPrev = this.lineStatus.prev(s);
                 let s2 = this.lineStatus.find(sBelow);
                 let s2Next = this.lineStatus.next(s2);
 
+                
+                this._pushIntersectionSegmentsInto(this._queue, s2, s2Next, idBelow);
                 this._pushIntersectionSegmentsInto(this._queue, sPrev, s, idAbove);
-                this._pushIntersectionSegmentsInto(this._queue, s2Next, s2, idBelow);
             }
             else if(p && p2 && p.type === POINT_RIGHT && p2.type === POINT_LEFT) {
+                console.log('right-left');
                 let skey = p.segments[0];
                 this.lineStatus.remove(skey);
 
@@ -186,10 +203,11 @@ class PolyUnionBuilder {
                 let s2Next = this.lineStatus.next(s2);
                 let s2Prev = this.lineStatus.prev(s2);
 
-                this._pushIntersectionSegmentsInto(this._queue, s2Next, s2, p2.id);
+                this._pushIntersectionSegmentsInto(this._queue, s2, s2Next, p2.id);
                 this._pushIntersectionSegmentsInto(this._queue, s2Prev, s2, p2.id);
             }
             else if(p && p2 && p.type === POINT_LEFT && p2.type === POINT_RIGHT) {
+                console.log('left-right');
                 let s2key = p2.segments[0];
                 this.lineStatus.remove(s2key);
 
@@ -198,10 +216,11 @@ class PolyUnionBuilder {
                 let sNext = this.lineStatus.next(s);
                 let sPrev = this.lineStatus.prev(s);
 
-                this._pushIntersectionSegmentsInto(this._queue, sNext, s, p.id);
+                this._pushIntersectionSegmentsInto(this._queue, s, sNext, p.id);
                 this._pushIntersectionSegmentsInto(this._queue, sPrev, s, p.id);
             }
             else if(p.type === POINT_RIGHT && p2.type === POINT_RIGHT) {
+                console.log('right-right');
                 let skey = p.segments[0];
                 this.lineStatus.remove(skey);
 
@@ -209,6 +228,7 @@ class PolyUnionBuilder {
                 this.lineStatus.remove(s2key);
             }
             else {
+                console.log('intersection');
                 // intersection
                 let s1Key = p.segments[0];
                 let s2Key = p.segments[1];
@@ -223,7 +243,9 @@ class PolyUnionBuilder {
                     let s4 = this.lineStatus.next(s2);
 
                     this._pushIntersectionSegmentsInto(this._queue, s3, s2, s2.data);
-                    this._pushIntersectionSegmentsInto(this._queue, s4, s1, s1.data);
+                    if (s4) {
+                        this._pushIntersectionSegmentsInto(this._queue, s1, s4, s4.data);
+                    }
                     
                     // interchange s1 and s2
                     this.lineStatus.remove(s1Key);
@@ -241,10 +263,11 @@ class PolyUnionBuilder {
                 let s1 = this._queue.shift();
                 // common abscisa for s and s1
                 let intersection = this._getPointIntersection(s.a, s.b, s1.a, s1.b);
-
+                
                 if (!intersection) {
                     break;
                 }
+                console.log('Intersection at ', intersection.x, intersection.y);
                 // if it's not already on my events queue
                 if (!this.events.find(intersection)) {
                     intersections.push(intersection);
