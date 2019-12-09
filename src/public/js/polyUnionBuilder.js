@@ -1,9 +1,12 @@
 const POINT_LEFT = "point_left";
 const POINT_RIGHT = "point_right";
 const INTERSECTION = "intersection";
+const POLY_A_ID = 'A';
+const POLY_B_ID = 'B';
 
 class Event {
-    constructor(type, point, ...segments) {
+    constructor(id, type, point, ...segments) {
+        this.id = id;
         this.type = type;
         this.point = point;
         this.segments = segments;
@@ -11,7 +14,9 @@ class Event {
 }
 
 class PolyUnionBuilder {
-    constructor(){
+    constructor(polyA, polyB){
+        this.polyA = polyA;
+        this.polyB = polyB;
         this.events = new AVLTree(this._comparatorEvents);
         this._queue = [];
         this.lineStatus = new AVLTree(this._comparatorSegments.bind(this));
@@ -40,16 +45,37 @@ class PolyUnionBuilder {
         return y1 - y2;
     }
 
-    _initEvents(segments) {
-        segments.forEach(segment => {
-            if (this._comparatorEvents(segment.a, segment.b) < 0) {
-                this.events.insert(segment.a, new Event(POINT_LEFT, segment.a, segment));
-                this.events.insert(segment.b, new Event(POINT_RIGHT, segment.b, segment));
-            } else {
-                this.events.insert(segment.a, new Event(POINT_RIGHT, segment.a, segment));
-                this.events.insert(segment.b, new Event(POINT_LEFT, segment.b, segment));
-            }
-        });
+    _insertSegmentInEvents(segment, id) {
+        if (this._comparatorEvents(segment.a, segment.b) < 0) {
+            this.events.insert(segment.a, new Event(id, POINT_LEFT, segment.a, segment));
+            this.events.insert(segment.b, new Event(id, POINT_RIGHT, segment.b, segment));
+        } else {
+            let s1 = new Segment(segment.b, segment.a);
+            s1.setPolyName(segment.polyName);
+            this.events.insert(segment.a, new Event(id, POINT_RIGHT, segment.a, s1));
+            this.events.insert(segment.b, new Event(id, POINT_LEFT, segment.b, s1));
+        }
+    }
+
+    _initEvents(polyA, polyB) {
+        for (let i = 0; i < polyA.length - 1; i++) {
+            let segment = new Segment(polyA[i], polyA[i+1]);
+            segment.setPolyName(POLY_A_ID);
+            this._insertSegmentInEvents(segment, POLY_A_ID);
+        }
+
+        for (let i = 0; i < polyB.length - 1; i++) {
+            let segment = new Segment(polyB[i], polyB[i+1]);
+            segment.setPolyName(POLY_B_ID);
+            this._insertSegmentInEvents(segment, POLY_B_ID);
+        }
+        
+        let lastSegA = new Segment(polyA[polyA.length - 1], polyA[0]);
+        let lastSegB = new Segment(polyB[polyB.length - 1], polyB[0]);
+        lastSegA.setPolyName(POLY_A_ID);
+        lastSegB.setPolyName(POLY_B_ID);
+        this._insertSegmentInEvents(lastSegA, POLY_A_ID);
+        this._insertSegmentInEvents(lastSegB, POLY_B_ID);
     }
 
     _segmentIntersection(s1, s2) {
@@ -94,51 +120,93 @@ class PolyUnionBuilder {
         }
       
         return new Point(xCoor, yCoor);
-      }
+    }
 
-    swapLineSegmentsIntersectionAlgo(segments) {
+    _pushIntersectionSegmentsInto(queue, s1, s2, id) {
+        if (s1 && s1.data.id != id && this._segmentIntersection(s1.key, s2.key)) {
+            let s1Copy = JSON.parse(JSON.stringify(s1.key));
+            let s2Copy = JSON.parse(JSON.stringify(s2.key));
+            queue.push(s1Copy, s2Copy);
+        }
+    }
+
+    swapLineSegmentsIntersectionAlgo(polyA, polyB) {
         let intersections = [];
-        this._initEvents(segments);
+        this._initEvents(polyA, polyB);
         while(this.events.size > 0 ) {
             let pKey = this.events.min();
             // avoid working with the object itself, make a deep copy.
             let p = JSON.parse(JSON.stringify(this.events.find(pKey).data));
             this.lastEvent = p;
             this.events.remove(pKey);
-            
-            if (p.type === POINT_LEFT) {
-                this.lineStatus.insert(p.segments[0]);
-                let s = this.lineStatus.find(p.segments[0]);
-                let s1 = this.lineStatus.prev(s);
-                let s2 = this.lineStatus.next(s);
-                if (s1 && this._segmentIntersection(s1.key, s.key)) {
-                    let s1Copy = JSON.parse(JSON.stringify(s1.key));
-                    let sCopy = JSON.parse(JSON.stringify(s.key));
-                    this._queue.push(s1Copy, sCopy);
-                }
-                if (s2 && this._segmentIntersection(s2.key, s.key)) {
-                    let s2Copy = JSON.parse(JSON.stringify(s2.key));
-                    let sCopy = JSON.parse(JSON.stringify(s.key));
-                    this._queue.push(sCopy, s2Copy);
-                }
+            let p2 = null;
+
+            if (p.type != INTERSECTION) {
+                let p2key = this.events.min();
+                p2 = JSON.parse(JSON.stringify(this.events.find(p2key).data));
+                this.events.remove(p2key);
             }
-            else if(p.type === POINT_RIGHT) {
-                let skey = p.segments[0];
-                let s = this.lineStatus.find(skey);
-                let s1 = this.lineStatus.prev(s);
-                let s2 = this.lineStatus.next(s);
+            
+            // vertex corresponds to a new vertex of polygon
+            if (p && p2 && p.type === POINT_LEFT && p2.type === POINT_LEFT) {
+                this.lastEvent.point.x += 0.1;
+                this.lineStatus.insert(p.segments[0], p.id);
+                this.lineStatus.insert(p2.segments[0], p.id);
+                let sAbove = null;
+                let sBelow = null;
+                let idAbove = null;
+                let idBelow = null;
 
-                if (s1 && s2) {
-                    let intersection = this._getPointIntersection(s1.key.a, s1.key.b, s2.key.a, s2.key.b);
-
-                    if (intersection && intersection.x > s.key.b.x) {
-                        let s1Copy = JSON.parse(JSON.stringify(s1.key));
-                        let s2Copy = JSON.parse(JSON.stringify(s2.key));
-                        this._queue.push(s1Copy, s2Copy);
-                    }
+                if (p.segments[0].b.y < p2.segments[0].b.y) {
+                    sAbove = p.segments[0];
+                    sBelow = p2.segments[0];
+                    idAbove = p.id;
+                    idBelow = p2.id;
+                } else {
+                    sBelow = p.segments[0];
+                    sAbove = p2.segments[0];
+                    idBelow = p.id;
+                    idAbove = p2.id;
                 }
-                
+
+                let s = this.lineStatus.find(sAbove);
+                let sPrev = this.lineStatus.prev(s);
+                let s2 = this.lineStatus.find(sBelow);
+                let s2Next = this.lineStatus.next(s2);
+
+                this._pushIntersectionSegmentsInto(this._queue, sPrev, s, idAbove);
+                this._pushIntersectionSegmentsInto(this._queue, s2Next, s2, idBelow);
+            }
+            else if(p && p2 && p.type === POINT_RIGHT && p2.type === POINT_LEFT) {
+                let skey = p.segments[0];
                 this.lineStatus.remove(skey);
+
+                this.lineStatus.insert(p2.segments[0], p2.id);
+                let s2 = this.lineStatus.find(p2.segments[0]);
+                let s2Next = this.lineStatus.next(s2);
+                let s2Prev = this.lineStatus.prev(s2);
+
+                this._pushIntersectionSegmentsInto(this._queue, s2Next, s2, p2.id);
+                this._pushIntersectionSegmentsInto(this._queue, s2Prev, s2, p2.id);
+            }
+            else if(p && p2 && p.type === POINT_LEFT && p2.type === POINT_RIGHT) {
+                let s2key = p2.segments[0];
+                this.lineStatus.remove(s2key);
+
+                this.lineStatus.insert(p.segments[0], p.id);
+                let s = this.lineStatus.find(p.segments[0]);
+                let sNext = this.lineStatus.next(s);
+                let sPrev = this.lineStatus.prev(s);
+
+                this._pushIntersectionSegmentsInto(this._queue, sNext, s, p.id);
+                this._pushIntersectionSegmentsInto(this._queue, sPrev, s, p.id);
+            }
+            else if(p.type === POINT_RIGHT && p2.type === POINT_RIGHT) {
+                let skey = p.segments[0];
+                this.lineStatus.remove(skey);
+
+                let s2key = p2.segments[0];
+                this.lineStatus.remove(s2key);
             }
             else {
                 // intersection
@@ -154,24 +222,15 @@ class PolyUnionBuilder {
                     let s3 = this.lineStatus.prev(s1);
                     let s4 = this.lineStatus.next(s2);
 
-                    if (s3 && this._segmentIntersection(s3.key, s2.key)) {
-                        let s3Copy = JSON.parse(JSON.stringify(s3.key));
-                        let s2Copy = JSON.parse(JSON.stringify(s2.key));
-                        this._queue.push(s3Copy, s2Copy);
-                    }
-                    if (s4 && this._segmentIntersection(s1.key, s4.key)) {
-                        let s1Copy = JSON.parse(JSON.stringify(s1.key));
-                        let s4Copy = JSON.parse(JSON.stringify(s4.key));
-                        this._queue.push(s1Copy, s4Copy);
-                    }
-
+                    this._pushIntersectionSegmentsInto(this._queue, s3, s2, s2.data);
+                    this._pushIntersectionSegmentsInto(this._queue, s4, s1, s1.data);
+                    
                     // interchange s1 and s2
-
                     this.lineStatus.remove(s1Key);
                     this.lineStatus.remove(s2Key);
                     this.lastEvent.point.x += 2;
-                    this.lineStatus.insert(s2Key);
-                    this.lineStatus.insert(s1Key);
+                    this.lineStatus.insert(s2Key, s2Key.polyName);
+                    this.lineStatus.insert(s1Key, s1Key.polyName);
                 }
                 
             }
@@ -189,7 +248,7 @@ class PolyUnionBuilder {
                 // if it's not already on my events queue
                 if (!this.events.find(intersection)) {
                     intersections.push(intersection);
-                    let event = new Event(INTERSECTION, intersection, s, s1);
+                    let event = new Event(`${s.polyName}, ${s1.polyName}`, INTERSECTION, intersection, s, s1);
                     this.events.insert(intersection, event);
                 }
             }

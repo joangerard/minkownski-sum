@@ -16,15 +16,18 @@
   <script src="/js/swaplineapp.js"></script>
   <script src="/js/segment.js"></script>
   <script src="/js/polyUnionBuilder.js"></script>
+  <script src="/js/polyUnionApp.js"></script>
   <link rel="stylesheet" href="/css/path-solver-general.css" />
 </head>
 <body>
     <script>
         const polyUnionBuilder = new PolyUnionBuilder();
-        const sl = new SwapLineApp(polyUnionBuilder);
+        const puApp = new PolyUnionApp(polyUnionBuilder);
 
     </script>
-    <button onclick="sl.execute()">Get Intersections</button>
+    <button onclick="puApp.closePolyA()">Close Polygon A</button>
+    <button onclick="puApp.closePolyB()">Close Polygon B</button>
+    <button onclick="puApp.getUnion()">Union of A and B</button>
     <label id='mouse-coord'></label>
 </body>
 </html>
