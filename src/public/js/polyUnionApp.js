@@ -5,6 +5,7 @@ class PolyUnionApp {
 
         this.polyA = new PIXI.Graphics();
         this.polyB = new PIXI.Graphics();
+        this.polyRes = new PIXI.Graphics();
 
         this.pointsA = [];
         this.pointsB = [];
@@ -69,7 +70,8 @@ class PolyUnionApp {
     }
 
     getUnion() {
-        let intersections = this.polyUnionBuilder.swapLineSegmentsIntersectionAlgo(this.pointsA, this.pointsB);
+        let intersections, polyUnion;
+        [intersections, polyUnion]= this.polyUnionBuilder.swapLineSegmentsIntersectionAlgo(this.pointsA, this.pointsB);
 
         intersections.forEach(intersection => {
             let point = new PIXI.Graphics();
@@ -81,6 +83,14 @@ class PolyUnionApp {
             point.endFill();
             this.app.stage.addChild(point);
         });
+        polyUnion.forEach(edge => {
+            this.polyRes.beginFill(0x00dddd);
+            this.polyRes.lineStyle(4, 0x00dddd, 1);
+            this.polyRes.moveTo(edge.a.x, edge.a.y);
+            this.polyRes.lineTo(edge.b.x, edge.b.y);
+            this.polyRes.endFill();
+            this.app.stage.addChild(this.polyRes);
+        })
     }
 
     closePolyA () {
