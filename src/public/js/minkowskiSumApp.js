@@ -6,9 +6,11 @@ class MinkowskiSumApp {
         sourcePolygonRNotInverted,
         helperCalculus,
         polygonOperationHelper,
+        polyUnionBuilder,
         width,
         height,
-        scale) {
+        scale,
+        defaultInit = true) {
         this.sourcePolygonQ = sourcePolygonQ;
         this.sourcePolygonR = sourcePolygonR;
         this.resultPolygon = resultPolygon;
@@ -18,6 +20,31 @@ class MinkowskiSumApp {
         this.width = width;
         this.height = height;
         this.scale = scale;
+        this.polyUnionBuilder = polyUnionBuilder;
+
+        if (defaultInit) {
+            this._initDefault();
+        }
+
+    }
+
+    _initDefault() {
+        this.sourcePolygonRNotInverted.addPoint(new Point(175.9999850802964,118.99996948242188));
+        this.sourcePolygonRNotInverted.addPoint(new Point(142.99998787774084,168.99996948242188));
+        this.sourcePolygonRNotInverted.addPoint(new Point(141.99998796251188,255.99996948242188));
+        this.sourcePolygonRNotInverted.addPoint(new Point(197.99998321533346,252.99996948242188));
+        this.sourcePolygonRNotInverted.addPoint(new Point(198.9999831305624,168.99996948242188));
+        this.sourcePolygonRNotInverted.addPoint(new Point(175.9999850802964,118.99996948242188));
+
+        this.sourcePolygonQ.addPoint(new Point(171.99998541938058,156.99993896484375));
+        this.sourcePolygonQ.addPoint(new Point(112.99999042087212,201.99993896484375));
+        this.sourcePolygonQ.addPoint(new Point(179.99998474121222,228.99993896484375));
+        this.sourcePolygonQ.addPoint(new Point(245.99997914632337,196.99993896484375));
+        this.sourcePolygonQ.addPoint(new Point(171.99998541938058,156.99993896484375));
+
+        let diff = new InverseGridApplication(this.sourcePolygonRNotInverted, this.sourcePolygonR, new HelperCalculus(), this.width, this.height, this.scale);
+        diff.getInverse();
+        this.bruteForceAlgo();
     }
 
     bruteForceAlgo() {
@@ -219,6 +246,24 @@ class MinkowskiSumApp {
             });
         });
         
-        this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);    
+
+        this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);
+        
+        // union polygons to get a final result
+        let unionOfPolygons = polygonsMS[0];
+
+        for(let i = 1; i < polygonsMS.length; i++) {
+            let intersectionPoints, polygons;
+            this.polyUnionBuilder = new PolyUnionBuilder();
+            [intersectionPoints, polygons] = this.polyUnionBuilder.swapLineSegmentsIntersectionAlgo(unionOfPolygons, polygonsMS[i]);
+            for(let j = 0; j < polygons.length; j++){
+                if (polygons[j].type === 'EXT_POLY') {
+                    unionOfPolygons = this.polyUnionBuilder.getPointsFromEdges(polygons[j].edges);
+                    break;
+                }
+            };
+        }
+
+        this.resultPolygon.addPolygon(unionOfPolygons, 0x123456, 0x123456, 0.0);
     }
 }

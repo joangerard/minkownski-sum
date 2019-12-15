@@ -5,6 +5,8 @@ const POLY_A_ID = 'A';
 const POLY_B_ID = 'B';
 const EXT_EDGE = 'EXT';
 const INT_EDGE = 'INT';
+const EXT_POLY = 'EXT_POLY';
+const INT_POLY = 'INT_POLY';
 
 class LineStatusEvent {
     constructor(id) {
@@ -26,6 +28,50 @@ class Event {
     }
 }
 
+class Polygon {
+
+    constructor() {
+        this.edges = [];
+        this.type = null;
+        this.closed = false;
+    }
+
+    // verify if one of the edges of a candidate corresponds to
+    // one of the edges 
+    connects(candidate, edge) {
+        return ((candidate && edge) && (candidate.a.x == edge.a.x && candidate.a.y == edge.a.y ||
+            candidate.a.x == edge.b.x && candidate.a.y == edge.b.y ||
+            candidate.b.x == edge.a.x && candidate.b.y == edge.a.y ||
+            candidate.b.x == edge.b.x && candidate.b.y == edge.b.y)) 
+    }
+
+    addEdge(edge, pos) {
+        this.edges.splice(pos, 0, edge);
+    }
+
+    addEdges(...edges) {
+        this.edges.push(...edges);
+    }
+
+    isPartOfBoundaryChain(candidateEdge) {
+        let size = this.edges.length;
+
+        if (size > 0) {
+            var firstEdge = this.edges[0];
+        }
+        if (size > 1) {
+            var lastEdge = this.edges[size - 1];
+        }
+        
+        if (this.connects(candidateEdge, firstEdge)) {
+            return [true, 0];
+        } else if(this.connects(candidateEdge, lastEdge)) {
+            return [true, size];
+        }
+        return [false, -1];
+    }
+}
+
 class PolyUnionBuilder {
     constructor(polyA, polyB){
         this.polyA = polyA;
@@ -35,6 +81,12 @@ class PolyUnionBuilder {
         this.lineStatus = new AVLTree(this._comparatorSegments.bind(this));
         this.lastEvent = null;
         this.unionPolyResult = [];
+
+        this.polygons = [];
+    }
+
+    _round(num) {
+        return Math.round(num * 100) / 100
     }
 
     _comparatorEvents(a, b) {
@@ -42,6 +94,13 @@ class PolyUnionBuilder {
             return a.y - b.y;
         }
         return a.x - b.x;
+    }
+
+    _minPoints (a, b) {
+        if (this._comparatorEvents(a, b) < 0) {
+            return a.x;
+        }
+        return b.x;
     }
 
     _comparatorSegments(s1, s2) {
@@ -56,7 +115,26 @@ class PolyUnionBuilder {
         let b2 = s2.a.y - m2 * s2.a.x;
         let y2 = m2 * this.lastEvent.point.x + b2;
 
+        if ((y1 - y2) === 0 && (s1.a.x!==s2.a.x || s1.a.y!== s2.a.y)) {
+            console.log('WHY?');
+        }
+
         return y1 - y2;
+    }
+
+    _pointInLine(p1, p2, x, y) {
+
+        if ((x === p1.x && y === p1.y) || (x === p2.x && y === p2.y)){
+            return true;
+        }
+
+         // calculate y coordinate for segment 1 on last event x coordinate.
+         let m1 = (p2.y - p1.y)/(p2.x - p1.x);
+         // y = m*x + b
+         let b1 = p1.y - m1 * p1.x;
+         let y1 = m1 * x + b1;
+
+         return Math.abs(y - y1) < 0.1;
     }
 
     _insertSegmentInEvents(segment, id) {
@@ -71,7 +149,53 @@ class PolyUnionBuilder {
         }
     }
 
+    _avoidVerticalHorizontalSegments(p1, p2) {
+        if (p1.x === p2.x) {
+            p1.x += 1;
+            p2.x -= 1;
+        }
+        if (p1.y === p2.y) {
+            p1.y += 1;
+            p2.y -= 1;
+        }
+    }
+
+    _filterCornerCasesInPoly(poly) {
+        for (let i = 0; i < poly.length - 1; i++) {
+             // avoid straight lines
+            this._avoidVerticalHorizontalSegments(poly[i], poly[i+1]);
+        }
+        this._avoidVerticalHorizontalSegments(poly[poly.length - 1], poly[0]);
+    }
+
+    _avoidSegmentSupperposition(polyA, polyB) {
+        // avoid that segments are one on each other.
+        for (let i = 0; i < polyA.length - 1; i++) {
+            for (let j = 0; j < polyB.length; j++) {
+                if (this._pointInLine(polyA[i], polyA[i+1], polyB[j].x, polyB[j].y)) {
+                    polyB[j].x += 1;
+                    polyB[j].y -= 1;
+                }
+            }
+        }
+
+        // last segment
+        for (let j = 0; j < polyB.length; j++) {
+            if (this._pointInLine(polyA[polyA.length-1], polyA[0], polyB[j].x, polyB[j].y)) {
+                polyB[j].x += 1;
+                polyB[j].y -= 1;
+            }
+        }
+    }
+
     _initEvents(polyA, polyB) {
+        // corner cases : vertical/horizontal lines && segment supperposition.
+        this._filterCornerCasesInPoly(polyA);
+        this._filterCornerCasesInPoly(polyB);
+        this._avoidSegmentSupperposition(polyA, polyB);
+        this._avoidSegmentSupperposition(polyB, polyA);
+        this._filterCornerCasesInPoly(polyB);
+
         for (let i = 0; i < polyA.length - 1; i++) {
             let segment = new Segment(polyA[i], polyA[i+1]);
             segment.setPolyName(POLY_A_ID);
@@ -190,24 +314,174 @@ class PolyUnionBuilder {
         }
     }
 
-    _addUnionSegmentFromSegment(segment) {
+    _closePolygonChaineIfNeeded(poly) {
+        if (poly.edges.length > 1) {
+            if (poly.connects(poly.edges[poly.length - 1], poly.edges[0])) {
+                poly.closed = true;
+            }
+        }
+    }
+
+    _joingPolyChaine(polyA, polyB) {
+        let AtoB0, posAB;
+
+        [AtoB0, posAB] = polyA.isPartOfBoundaryChain(polyB.edges[0]);
+
+        if (AtoB0) {
+            // A -> 0 ; B -> 0
+            if (posAB === 0 ) {
+                polyB.edges = [...polyB.edges.reverse(), ...polyA.edges];
+          
+                return polyB;
+            } else {
+                // A -> A.lenght-1 ; B -> 0
+                polyA.addEdges(...polyB.edges);
+              
+                return polyA;
+            }
+        }
+
+        if (polyB.edges.length > 1) {
+            [AtoB0, posAB] = polyA.isPartOfBoundaryChain(polyB.edges[polyB.edges.length - 1]);
+
+            if (AtoB0) {
+                // A -> 0 ; B -> B.length-1
+                if (posAB === 0) {
+                    polyB.addEdges(...polyA.edges);
+          
+                    return polyB;
+                } else {
+                    // A -> A.length-1 ; B -> B.length-1
+                    polyB.edges = [...polyB.edges, ...polyA.edges.reverse()];
+  
+                    return polyB;
+                }
+            }
+        }
+        
+    }
+
+    _addPointFrom(edges, i, j, points) {
+        if (edges[i].a.x === edges[j].a.x &&
+            edges[i].a.y === edges[j].a.y) {
+
+            points.push(new Point(edges[i].a.x, edges[i].a.y));
+        }
+        else if (edges[i].b.x === edges[j].a.x &&
+                 edges[i].b.y === edges[j].a.y) {
+
+            points.push(new Point(edges[i].b.x, edges[i].b.y));
+        }
+        else if (edges[i].a.x === edges[j].b.x &&
+                 edges[i].a.y === edges[j].b.y) {
+
+            points.push(new Point(edges[i].a.x, edges[i].a.y));
+        }
+        else if (edges[i].b.x === edges[j].b.x &&
+                 edges[i].b.y === edges[j].b.y) {
+            points.push(new Point(edges[i].b.x, edges[i].b.y));
+        }
+    }
+
+    _reducePoint(points, i, j) {
+        if (Math.abs(points[i].x - points[j].x) <= 6 && Math.abs(points[i].y - points[j].y) <= 6) {
+            points[i].x = Math.floor((points[i].x + points[j].x)/2);
+            points[i].y = Math.floor((points[i].y + points[j].y)/2);
+            points.splice(j, 1);
+            return i;
+        }
+        return i+1;
+    }
+
+    getPointsFromEdges(edges) {
+        let points = [];
+        for(let i = 0; i < edges.length - 1; i++) {
+            this._addPointFrom(edges, i, i+1, points);
+        }
+
+        this._addPointFrom(edges, edges.length - 1, 0, points);
+
+        // delete points which are near to each other.
+        let i = 0;
+        while(i < points.length - 1) {
+            i = this._reducePoint(points, i, i+1);
+        }
+        this._reducePoint(points, points.length - 2, points.length - 1);
+        this._reducePoint(points, points.length - 1, 0);
+
+        return points;
+    }
+
+    _addToPolygonsList(newSegment, polygons, type=INT_POLY) {
+        let belongsToBC, pos;
+        if (polygons.length > 0 ){
+            let segmentBelongsToSomePoly = false;
+            let indexPolyItBelongs = [];
+            for (let i = 0; i < polygons.length; i++) {
+
+                [belongsToBC, pos] = polygons[i].isPartOfBoundaryChain(newSegment);
+                if (belongsToBC) {
+                    if (!segmentBelongsToSomePoly) {
+                        polygons[i].addEdge(newSegment, pos);
+                    }
+                    polygons[i].type = type;
+                    segmentBelongsToSomePoly = true;
+                    indexPolyItBelongs.push(i);
+                }
+            }
+            
+            if (!segmentBelongsToSomePoly) {
+                // manage the hypothesis that it is a hole
+                let polygon = new Polygon();
+                polygons.type = type;
+                polygon.addEdge(newSegment);
+                polygons.push(polygon);
+            } else if(indexPolyItBelongs.length > 1) {
+                // joining the polygons
+                let idPolyA = indexPolyItBelongs.pop();
+                let idPolyB = indexPolyItBelongs.pop();
+                
+                let newPoly = this._joingPolyChaine(polygons[idPolyA], polygons[idPolyB]);
+                newPoly.type = type;
+                // delete both polygons 
+                polygons.splice(idPolyA, 1);
+                polygons.splice(idPolyB, 1);
+                // add the new one
+                polygons.push(newPoly);
+            }
+        } else {
+            let polygon = new Polygon();
+            polygons.type = type;
+            polygon.addEdge(newSegment);
+            polygons.push(polygon);
+        }
+    }
+
+    _addUnionSegmentFromSegment(segment, polygons, type=INT_POLY) {
         //create edge from segment.a -> intersection point.
         let initialPoint = segment.data.lastIntersection ? segment.data.lastIntersection : segment.key.a;
         let newSegment = new Segment(initialPoint, segment.key.b);
-        this.unionPolyResult.push(newSegment);
+        this._addToPolygonsList(newSegment, polygons, type);
     }
 
-    _addUnionSegmentFrom(segment, intersectionPoint) {
+    _addUnionSegmentFrom(segment, intersectionPoint, polygons, type=INT_POLY) {
         //create edge from segment.a -> intersection point.
         let initialPoint = segment.data.lastIntersection ? segment.data.lastIntersection : segment.key.a;
         let newSegment = new Segment(initialPoint, intersectionPoint);
-        this.unionPolyResult.push(newSegment);
+        this._addToPolygonsList(newSegment, polygons, type);
     }
 
     swapLineSegmentsIntersectionAlgo(polyA, polyB) {
         let intersections = [];
-        this._initEvents(polyA, polyB);
         let previousX = null;
+        this.events = new AVLTree(this._comparatorEvents);
+        this._queue = [];
+        this.lineStatus = new AVLTree(this._comparatorSegments.bind(this));
+        this.lastEvent = null;
+        this.unionPolyResult = [];
+        this.polygons = [];
+        this._initEvents(polyA, polyB);
+        
         while(this.events.size > 0 ) {
             let pKey = this.events.min();
             // avoid working with the object itself, make a deep copy.
@@ -225,7 +499,7 @@ class PolyUnionBuilder {
             // vertex corresponds to a new vertex of polygon
             if (p && p2 && p.type === POINT_LEFT && p2.type === POINT_LEFT) {
                 console.log('left-left');
-                this.lastEvent.point.x += 0.0001;
+                this.lastEvent.point.x += 0.000001;
                 this.lineStatus.insert(p.segments[0], new LineStatusEvent(p.id));
                 this.lineStatus.insert(p2.segments[0], new LineStatusEvent(p2.id));
                 let sAbove = null;
@@ -252,12 +526,18 @@ class PolyUnionBuilder {
                 console.log('right-left');
                 let skey = p.segments[0];
                 let s = this.lineStatus.find(skey);
+                let aux = this.lastEvent.point.x;
+                if (!s) {
+                    this.lastEvent.point.x = skey.a.x;
+                    s = this.lineStatus.find(skey);
+                }
                 let edgeType = s.data.type
-
+                
                 if (s.data.type === EXT_EDGE) {
-                    this._addUnionSegmentFromSegment(s);
+                    this._addUnionSegmentFromSegment(s, this.polygons);
                 }
                 this.lineStatus.remove(skey);
+                this.lastEvent.point.x = aux;
 
                 // copy edge type: EXT/INT from previous.
                 let lineStatusEvent = new LineStatusEvent(p2.id);
@@ -273,15 +553,21 @@ class PolyUnionBuilder {
             else if(p && p2 && p.type === POINT_LEFT && p2.type === POINT_RIGHT) {
                 console.log('left-right');
                 let s2key = p2.segments[0];
+                
                 let s2 = this.lineStatus.find(s2key);
+                let aux = this.lastEvent.point.x;
+                if (!s2) {
+                    this.lastEvent.point.x = s2key.a.x;
+                    s2 = this.lineStatus.find(s2key);
+                }
                 let edgeType = s2.data.type;
 
                 if (s2.data.type === EXT_EDGE) {
-                    this._addUnionSegmentFromSegment(s2);
+                    this._addUnionSegmentFromSegment(s2, this.polygons);
                 }
 
                 this.lineStatus.remove(s2key);
-
+                this.lastEvent.point.x = aux;
                 // copy edge type: EXT/INT from previous.
                 let lineStatusEvent = new LineStatusEvent(p.id);
                 lineStatusEvent.type = edgeType;
@@ -296,22 +582,45 @@ class PolyUnionBuilder {
             }
             else if(p.type === POINT_RIGHT && p2.type === POINT_RIGHT) {
                 console.log('right-right');
-                
-                this.lastEvent.point.x -= 0.1;
 
                 let skey = p.segments[0];
                 let s = this.lineStatus.find(skey);
+                let polyType = INT_POLY;
+
+                if (this.events.size === 0) {
+                    polyType = EXT_POLY;
+                }
+
+                if (!s) {
+                    this.lastEvent.point.x -= 0.000001;
+                    s = this.lineStatus.find(skey);
+                }
+
+                if (!s) {
+                    this.lastEvent.point.x = skey.a.x
+                    s = this.lineStatus.find(skey);
+                }
 
                 if (s.data.type === EXT_EDGE) {
-                    this._addUnionSegmentFromSegment(s);
+                    this._addUnionSegmentFromSegment(s, this.polygons, polyType);
                 }
                 this.lineStatus.remove(skey);
 
                 let s2key = p2.segments[0];
                 let s2 = this.lineStatus.find(s2key);
 
+                if (!s2) {
+                    this.lastEvent.point.x -= 0.000001;
+                    s2 = this.lineStatus.find(s2key);
+                } 
+
+                if (!s2) {
+                    this.lastEvent.point.x = s2key.a.x
+                    s2 = this.lineStatus.find(s2key);
+                }
+
                 if (s2.data.type === EXT_EDGE) {
-                    this._addUnionSegmentFromSegment(s2);
+                    this._addUnionSegmentFromSegment(s2, this.polygons, polyType);
                 }
 
                 this.lineStatus.remove(s2key);
@@ -323,7 +632,7 @@ class PolyUnionBuilder {
                 let s2Key = p.segments[1];
                 let intersectionPoint = new Point(this.lastEvent.point.x, this.lastEvent.point.y);
 
-                this.lastEvent.point.x -= 0.1;
+                this.lastEvent.point.x -= 0.000001;
                 let s1 = this.lineStatus.find(s1Key);
                 let s2 = this.lineStatus.find(s2Key);
 
@@ -339,11 +648,11 @@ class PolyUnionBuilder {
                     // add edges to the union polygon
                     if (s1.data.type === EXT_EDGE) {
                         //create edge from s1.a -> intersection point.
-                        this._addUnionSegmentFrom(s1, intersectionPoint);
+                        this._addUnionSegmentFrom(s1, intersectionPoint, this.polygons);
                     }
                     if (s2.data.type === EXT_EDGE) {
                          //create edge from s2.a -> intersection point.
-                         this._addUnionSegmentFrom(s2, intersectionPoint);
+                         this._addUnionSegmentFrom(s2, intersectionPoint, this.polygons);
                     }
                     
                     // interchange s1 and s2
@@ -368,7 +677,7 @@ class PolyUnionBuilder {
 
                     this.lineStatus.remove(s1Key);
                     this.lineStatus.remove(s2Key);
-                    this.lastEvent.point.x += 0.2;
+                    this.lastEvent.point.x += 0.000002;
 
                     let lineStatusEvents1 = new LineStatusEvent(s1Key.polyName);
                     lineStatusEvents1.type = s1Type;
@@ -404,6 +713,6 @@ class PolyUnionBuilder {
             previousX = this.lastEvent.point.x;
         }
 
-        return [intersections, this.unionPolyResult];
+        return [intersections, this.polygons];
     }
 }

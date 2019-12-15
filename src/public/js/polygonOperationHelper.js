@@ -124,7 +124,7 @@ class PolygonOperationHelper {
 
     convexHull(points) {
         // sort point by x coordinate
-        points.sort((p1, p2) => p1.x > p2.x);
+        points = points.sort((p1, p2) => p1.x - p2.x);
 
         // create two stacks: one for the upper points and the other for the lower points.
         let upPoints = [points[0], points[1]];

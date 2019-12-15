@@ -1,5 +1,5 @@
 class GridApplication {
-    constructor(PIXI, width, height, pointEvent, helperCalculus, interaction = true, scale, color=0x650A5A) {
+    constructor(PIXI, width, height, pointEvent, helperCalculus, interaction = true, scale, color=0x650A5A, canvasName) {
 
         this.width = width;
         this.height = height;
@@ -28,7 +28,7 @@ class GridApplication {
             fontStyle: 'italic'
         });
 
-        document.body.appendChild(this.app.view);
+        document.getElementById(canvasName).appendChild(this.app.view);
 
         this._addEventListeners();
         this._drawCoordinatesSystem();

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Simple Sidebar - Start Bootstrap Template</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+ 
+
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-light border-right" id="sidebar-wrapper">
+      <div class="sidebar-heading">Start Bootstrap </div>
+      <div class="list-group list-group-flush">
+        <a href="index.html" class="list-group-item list-group-item-action bg-light">Welcome</a>
+        <a href="minkownski-sum.html" class="list-group-item list-group-item-action bg-light">Minkowski Sums</a>
+        <a href="union-polygons.html" class="list-group-item list-group-item-action bg-light">Union of Polygons</a>
+        <a href="visibility-graph.html" class="list-group-item list-group-item-action bg-light">Visibility Graph</a>
+        <a href="all-together.html" class="list-group-item list-group-item-action bg-light">Putting all together</a>
+        <a href="references.html" class="list-group-item list-group-item-action bg-light">References</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+      <div class="container-fluid">
+        
+        <h1>Minkonswki Sums</h1>
+        <p>
+        When the robot is a polygon, the configuration-space obstacles are not equal to the 
+        work space. 
+
+        <h3>\(\textbf{C}\)-obstacles</h3>
+        </p>
+        <p>
+        Given a convex robot \(R\) and a convex obstacle \(P\). The <b>\(\textbf{C}\)-obstacle of \(\textbf{P}\)</b>, 
+        denoted as \(\textbf{CP}\), and the 
+        robot \(R\) is defined as the set of points in the configuration space such that the 
+        translation of \(R\) intersects \(P\). For visualizing the form of this object 
+        the reader could imagine that a robot has a pen attached to it that represents its 
+        reference point and he slides the robot around an object without separating it. 
+        The figure drawn by the pen represents the \(C\)-obstacle. The figure below shows
+        the work space obstacle object colored green,
+        the robot colored green and the \(CP\) obstacle colored red.
+        </p>
+        <div id="polyResult2" class="text-center"></div>
+        
+        More formally:
+
+        $$CP := \{ (x,y) : R(x,y) \cap P = \emptyset\} $$
+
+        <h3>Defining Minkowski Sums</h3>
+        <p>
+        The <b>Minkowski Sum</b> or <b>pointwise sum</b> of two sets \(A, B\) is defined as follows:
+
+        $$ A \oplus B = \{a + b : a \in A, b \in B\} $$
+
+        Where \(a\) + \(b\) are the vertor sum of two vectors. Therefore if \(a = (a_x, b_x) \) and 
+        \( b = (b_x, b_y)\) then \(a+b := (a_x + b_x, a_y + b_y) \)
+        If we select a point \(c\) and we apply the Minkowski Sum between that point 
+        and a set \(B\) the result will be the set \(B\) translated by x. Then in other words
+        \(A \oplus B = \bigcup_{a \in A} (a \oplus B) \) is the union of all the resulting
+        copies of B translated by \(x \in A\).
+
+        </p>
+
+        <p>
+        For a point \(r:=(r_x, r_y)\) there exists its <b>reflecting value</b> defined to be \(-r:=-r_x,-r_y\).
+        Thus a reflecting polygon of \(R\) is defined as \(-R:= \{ -r : r \in R\} \).
+        </p>
+
+        <b>Theorem 1</b>
+        <br>
+        <p>
+        Let \(R\) be a planar robot with \(r\) as its reference point and let \(P\) be an obstacle. The \(C\)-obstacle of \(P\) is
+        \(P \oplus -R(r_x,r_y) \).
+        </p>
+        <p>
+            First if \(R\) is translated so that \(r\) is strictly inside the \(C\)-obstacle it means that 
+            \(R\) goes through obstacle \(P\) thus \(R \cap P \neq \emptyset \). Second if \(R\) is translated
+            so that \(r\) lies on the boundary of \(C\)-obstacle then the boundary of \(R\) touches the boundary 
+            of \(P\). Finally if \(R\) is translated so that \(r\) is strictly exterior to the \(C\)-obstacle 
+            then R and P does not touch each other thus \(R \cap P = \emptyset \).
+        </p>
+
+
+        <p>
+            <a class="btn btn-info" data-toggle="collapse" href="#theorem1" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">Show Proof</a>
+        </p>
+        <div class="row">
+            <div class="col">
+                <div class="collapse multi-collapse" id="theorem1">
+                <div class="jumbotron">
+
+                    <p>
+                        \(\Rightarrow\)
+                        If \(R(x,y)\) intersects \(P\) then \((x,y) \in P \oplus (-R(0,0))\). <br/>
+                        Assume that \(R(x,y)\) intersects \(P\), let \(q = (q_x, q_y)\) be a point in the
+                        intersection. Thus \((q_x - x,q_y - y) \in R(0,0)\) or \((x - q_x,y - q_y) \in -R(0,0)\)
+                        because \(q \in R(x,y)\). Moreover \(q \in P\). Thus \((x,y) \in P \oplus -R(0,0)\).
+                    </p>
+                    <br/>
+
+                    <div class="text-center">
+                        <img src="img/c-obstacle.png" width="300" />
+                    </div>
+                    <p>
+                        \(\Leftarrow\)
+                        If \((x,y) \in P \oplus (-R(0,0))\) then \(R(x,y)\) intersects \(P\).<br/>
+                        There are points \((r_x, r_y) \in R(0,0)\) and \((p_x, p_y) \in P\) such that
+                        \((x,y)=(p_x -r_x, p_y-r_y)\), in other words \(p_x=x + r_x\) and \(p_y=y+r_y\) that indicates
+                        that \(R(x,y)\) intersects \(P\).
+                    </p>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Minkowski Sum</h3>
+        
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <p>
+                            <b>Minkownski Sum Algorithm</b> <br>
+                        </p>
+                        <hr class="my-4"/>
+                        <p>
+                            <b>Inputs:</b> Two convex polygons \(S1, S2\)<br>
+                            <b>Output:</b> \(S1 \oplus S2\)<br>
+                            <br>
+                            \(S_{res} \leftarrow\)  []<br>
+                            <br>
+                            for (\(s_i \in S1\)):<br>
+                            &emsp;&emsp;for (\(s_j \in S2\)):<br>
+                            &emsp;&emsp;&emsp;&emsp;\(s_{res} \leftarrow s_i \oplus s_j \)<br>
+                            &emsp;&emsp;&emsp;&emsp;Add \(s_{res}\) to \(S_{res}\)<br>
+                            &emsp;&emsp;&emsp;&emsp;\(j \leftarrow j + 1\)<br>
+                            &emsp;&emsp;\(i \leftarrow i + 1\)<br>
+                                    <br>
+                            \(S_{res} \leftarrow\) GrahamScan(\(S_{res}\))<br>
+                            <b>return</b> \(S_{res}\)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <p>
+                The algorithm calculates the pairwise sum of vertices belonging to the two 
+                polygons received and creates a new set containing these points. 
+                Then the convex hull of these points is calculated using the 
+                <a href="https://en.wikipedia.org/wiki/Graham_scan">Graham Scan</a> algorithm
+                which has a time complexity of \(O(nlogn)\) where \(n\) is the number
+                of points received. 
+                </p>
+                <p>
+                    Thus the time complexity of the algorithm is \(O(nm)\) where \(n\) and \(m\) 
+                    are the number of elements of \(S_1\) and \(S_2\) respectively.
+                </p>
+                <p>
+                    This algorithm has two main issues:
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            It does not work for non-convex polygons.
+                        </li>
+                        <li class="list-group-item">
+                            The time complexity is quadratic.
+                        </li>
+                    </ul>
+       
+                    
+                </p>
+                <p>
+                        So can we do it better?
+                    </p>
+            </div>
+        </div> 
+        <hr class="my-4"/>
+        <h3>
+            Try it by yourself!
+        </h3>
+        <ul>
+            <li>
+                Click on the canvas to draw a point.
+            </li>
+            <li>
+                Keep adding points into the canvas. The previous point will be connected
+                automatically to the current point. Thus drawing the boundary of the polygon.
+            </li>
+            <li>
+                Adjust the points dragging and dropping it.
+            </li>
+            <li>
+                Once you set up the two polygons click on the "Get Minkowski Sum" button.
+                You will see the reflected robot \(-R\) and the \(C\) obstacle resulting
+                from the operation \(-R \oplus P\)
+            </li>
+        </ul>
+        <hr class="my-4">
+        <h3>Inputs:</h3>
+        
+        <div class="row">
+            <div class="col text-center">
+                <p>
+                    Draw the shape of your robot <b>\(R\)</b>.<br>
+                    It must be a convex polygon.<br>
+                    Notice that the reference point is at (0,0) in the
+                    Cartesian Coordinate System.<br>
+                </p>
+                <div id="polyA"></div>
+            </div>
+            <div class="col text-center">
+                Draw the shape of your your obstacle <b>\(P\)</b>.<br>
+                It must be a convex polygon.
+                <div id="polyB"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col  text-center">
+                <button onclick="exec();" class="btn btn-primary">Get Minkowski Sum</button>
+                <button onclick="init(false)" class="btn btn-primary">Clear Canvas</button>
+            </div>
+        </div>
+        
+        <hr/>
+        <h3>Outputs:</h3>
+        <div class="row">
+            <div class="col text-center">
+                <p>
+                    This shows the \(-R(0,0)\) polygon.
+                </p>
+                <div id="polyAInverted"></div>
+            </div>
+            <div class="col text-center">
+                <p>
+                    This shows the \(C\)-obstacle in red.
+                </p>
+                <div id="polyResult"></div>
+            </div>
+        </div>
+        
+
+
+       
+
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  
+  <!-- <script src="https://unpkg.com/avl"></script>
+  
+  
+  <script src="/js/swaplineapp.js"></script>
+  <script src="/js/segment.js"></script>
+
+  <script src="/js/polyUnionApp.js"></script> -->
+
+   <!-- Custom styles for this template -->
+   <script src="https://unpkg.com/avl"></script>
+   <link href="css/simple-sidebar.css" rel="stylesheet">
+   <script src="/scripts/pixi.min.js"></script>
+   <script src="vendor/jquery/jquery.min.js"></script>
+   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+   <script src="/js/application.js"></script>
+   <script src="/js/pointEvent.js"></script>
+   <script src="/js/triangle.js"></script>
+   <script src="/js/point.js"></script>
+   <script src="/js/pointEventDeactivated.js"></script>
+   <script src="/js/helperCalculus.js"></script>
+   <script src="/js/inverseGridApplication.js"></script>
+   <script src="/js/polygonOperationHelper.js"></script>
+   <script src="/js/minkowskiSumApp.js"></script>
+   <script src="/js/polyUnionBuilder.js"></script>
+
+    <!-- C-Obstacle demonstration -->
+     
+    <script> 
+        let diff, minkowskiSumApp;
+        function init(defaultInit) {
+            document.getElementById('polyA').innerHTML = "";
+            document.getElementById('polyB').innerHTML = "";
+            document.getElementById('polyAInverted').innerHTML = "";
+            document.getElementById('polyResult').innerHTML = "";
+            document.getElementById('polyResult2').innerHTML = "";
+            const width = 360, height = 400, scale = 10;
+            const app = new GridApplication(PIXI, width, height, new PointEvent(), new HelperCalculus(), true, scale, 0x0000ff,'polyA');
+            const app2 = new GridApplication(PIXI, width, height, new PointEvent(), new HelperCalculus(), true, scale, 0x00ff00, 'polyB');
+            
+            const res1 = new GridApplication(PIXI, width, height, new PointEventDeactivated(), new HelperCalculus(), false, scale, 0x0000ff, 'polyAInverted');
+            diff = new InverseGridApplication(app, res1, new HelperCalculus(), width, height, scale);
+            
+            const res2 = new GridApplication(PIXI, width, height, new PointEventDeactivated(), new HelperCalculus(), false, scale, 0xff0000, 'polyResult');
+            const res3 = new GridApplication(PIXI, width, height, new PointEventDeactivated(), new HelperCalculus(), false, scale, 0xff0000, 'polyResult2');
+            minkowskiSumApp = new MinkowskiSumApp(res1, app2, res2, app, new HelperCalculus(), new PolygonOperationHelper(), new PolyUnionBuilder(), width, height, scale, defaultInit);
+            minkowskiSumApp2 = new MinkowskiSumApp(res1, app2, res3, app, new HelperCalculus(), new PolygonOperationHelper(), new PolyUnionBuilder(), width, height, scale, defaultInit);
+        }
+
+        function exec() {
+            diff.getInverse();
+            minkowskiSumApp.bruteForceAlgo();
+            minkowskiSumApp2.bruteForceAlgo();
+        }
+        init(true);
+    </script>
+
+
+  <script src="/js/load-mathx.js" async></script>
+
+  <!-- Menu Toggle Script -->
+  <script>
+    $("#menu-toggle").click(function(e) {
+      e.preventDefault();
+      $("#wrapper").toggleClass("toggled");
+    });
+  </script>
+</body>
+
+</html>

@@ -7,6 +7,8 @@
 <!-- get minkowskiSum -->
 <script>
     const resPolygonCanvas = new GridApplication(PIXI, width, height, new PointEventDeactivated(), new HelperCalculus(), false, scale);
-    const minkowskiSumApp = new MinkowskiSumApp(rPolygonCanvas, qPolygonCanvas, resPolygonCanvas, null, new HelperCalculus(), new PolygonOperationHelper(), width, height, scale);
+    const minkowskiSumApp = new MinkowskiSumApp(rPolygonCanvas, qPolygonCanvas, resPolygonCanvas, null,  new HelperCalculus(), new PolygonOperationHelper(), new PolyUnionBuilder(), width, height, scale);
 </script>
+
 <button onclick="minkowskiSumApp.linearAlgoNonConvex();">Get Minkowski Sum</button>
+    

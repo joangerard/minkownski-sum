@@ -1,8 +1,104 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
+
   <meta charset="utf-8">
-  <script src="https://unpkg.com/avl"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Computation Geometry: Roboth path planning</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/simple-sidebar.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-light border-right" id="sidebar-wrapper">
+      <div class="sidebar-heading">Computational Geometry</div>
+      <div class="list-group list-group-flush">
+        <a href="index.html" class="list-group-item list-group-item-action bg-light">Welcome</a>
+        <a href="minkownski-sum.html" class="list-group-item list-group-item-action bg-light">Minkonski Sums</a>
+        <a href="union-polygons.html" class="list-group-item list-group-item-action bg-light">Union of Polygons</a>
+        <a href="visibility-graph.html" class="list-group-item list-group-item-action bg-light">Visibility Graph</a>
+        <a href="all-together.html" class="list-group-item list-group-item-action bg-light">Putting all together</a>
+        <a href="references.html" class="list-group-item list-group-item-action bg-light">References</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+      <div class="container-fluid">
+          <h1>Introduction</h1>
+            <p>
+            This project is about computational geometry and its application to robotics. The main objective is that
+            the reader has a complete view on how to resolve the shortest path planning problem for a robot given an initial position,
+            a goal position and a set of obstacles. Some assumptions and simplifications of the reality will be made 
+            in this case. Thus the robot and the obstacles will be defined to be
+            convex or non-convex polygons on a planar region, the environment will be considered to be static
+            so the obstacles will not move, and the robot cannot turn but it can move to front, back, right and left.
+          </p>
+          <p>
+              The content of this blog is oriented to show the construction
+              of three main concepts to resolve the shortest path planning problem:
+          </p>
+          
+
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Minkownski Sums</li>
+            <li class="list-group-item">Union of Polygons</li>
+            <li class="list-group-item">Visibility Graphs construction</li>
+          </ul>
+          <br/>
+          <h2>
+            Some Definitions Before Starting
+          </h2>
+          <p>
+            Let \(R\) be a simple polygon that represents the robot shape.
+             It moves on a planar region which is a 2-dimensional 
+            environemnt that
+            is called <b>work space</b>. Such region contains a set of \(S = \{P_1, P_2, ... , P_i\} \) obstacles with \(P_i\) to be a 
+            simple polygon that represents the obstacle shape for all \(i\).
+          </p>
+          <p>
+            A robot has a <b>reference point</b> attached to it which is not necessary inside the robot. This point describes
+            the translation of the robot on the work space as a vector. Thus \(R(0,0)\) is the origin. If the robot
+            moves three metters to the left and four metters to the top then the reference point will be at \(R(3,4)\).
+          </p>
+          
+          <p>
+            A <b>configuration space</b> denoted by \(C(R)\) is a complete specification of the position of every point in the system. Thus not
+            all the points in the configuration space are accessible for the robot. For instance, those points that are 
+            occupied by the obstacles. They are called the <b>forbidden configuration</b> denoted by \(C_{forb}(R, S)\). The rest of 
+            the space that are not occupied by obstacles are totally accessible for the robot, called the <b>free space</b>
+            and denoted by \(C_{free}(R,S)\).
+          </p>
+
+          <p>
+            An obstacle \(P\) is mapped into the configuration space. The result is called <b>configuration-space obstacle </b>
+            or \(C\)-obstacle of \(P\).
+          </p>
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- <script src="https://unpkg.com/avl"></script>
   <script src="/scripts/pixi.min.js"></script>
   <script src="/js/triangle.js"></script>
   <script src="/js/application.js"></script>
@@ -16,18 +112,11 @@
   <script src="/js/swaplineapp.js"></script>
   <script src="/js/segment.js"></script>
   <script src="/js/polyUnionBuilder.js"></script>
-  <script src="/js/polyUnionApp.js"></script>
-  <link rel="stylesheet" href="/css/path-solver-general.css" />
-</head>
-<body>
-    <script>
-        const polyUnionBuilder = new PolyUnionBuilder();
-        const puApp = new PolyUnionApp(polyUnionBuilder);
+  <script src="/js/polyUnionApp.js"></script> -->
 
-    </script>
-    <button onclick="puApp.closePolyA()">Close Polygon A</button>
-    <button onclick="puApp.closePolyB()">Close Polygon B</button>
-    <button onclick="puApp.getUnion()">Union of A and B</button>
-    <label id='mouse-coord'></label>
+  <!-- Menu Toggle Script -->
+  <script src="/js/load-mathx.js" async></script>
+
 </body>
+
 </html>
