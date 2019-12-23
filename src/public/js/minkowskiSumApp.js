@@ -199,6 +199,39 @@ class MinkowskiSumApp {
         this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);    
     }
 
+    _nonConvToConv(copyR, copyQ, sourcePolygonR) {
+        console.log("Non-convex to Convex");
+        let polygonsMS = [];
+
+        let trianglesR = this.polygonOperationHelper.triangulatePoly(copyR, []);
+        sourcePolygonR.addTriangles(trianglesR, 0xAA00BB);
+
+        trianglesR.forEach((triangleR) => {
+            let polygonResult = this.polygonOperationHelper.minkownskiSumLinearAlgo(
+                this.helperCalculus.getPositionCoordinatesList(triangleR.getPoints(), this.width, this.height, this.scale),
+                this.helperCalculus.getPositionCoordinatesList(copyQ, this.width, this.height, this.scale));
+
+            polygonResult = this.helperCalculus.getCanvasCoordinatesList(polygonResult, this.width, this.height, this.scale);
+            polygonsMS.push(polygonResult);
+            this.resultPolygon.addPolygon(polygonResult, 0x00ff00, 0x00ff00, 0.25);
+        });
+
+        // union polygons to get a final result
+        let unionOfPolygons = polygonsMS[0];
+        for(let i = 1; i < polygonsMS.length; i++) {
+            let intersectionPoints, polygons;
+            this.polyUnionBuilder = new PolyUnionBuilder();
+            [intersectionPoints, polygons] = this.polyUnionBuilder.swapLineSegmentsIntersectionAlgo(unionOfPolygons, polygonsMS[i]);
+            for(let j = 0; j < polygons.length; j++){
+                if (polygons[j].type === 'EXT_POLY') {
+                    unionOfPolygons = this.polyUnionBuilder.getPointsFromEdges(polygons[j].edges);
+                    break;
+                }
+            };
+        }
+        return unionOfPolygons;
+    }
+
     linearAlgoNonConvex(){
         let pPolygonPosCoord = this.helperCalculus.getPositionCoordinatesList(
             this.sourcePolygonR.getPoints(),
@@ -220,8 +253,6 @@ class MinkowskiSumApp {
             // make it anti clockwise
             copyR = copyR.reverse();
         }
-        let trianglesR = this.polygonOperationHelper.triangulatePoly(copyR, []);
-        this.sourcePolygonR.addTriangles(trianglesR, 0xAA00BB);
 
         // triangulate polygon Q
         let copyQ = this.polygonOperationHelper.copyPoints(this.sourcePolygonQ.getPoints());
@@ -229,41 +260,72 @@ class MinkowskiSumApp {
             // make it anti clockwise
             copyQ = copyQ.reverse();
         }
-        let trianglesQ = this.polygonOperationHelper.triangulatePoly(copyQ, []);
-        this.sourcePolygonQ.addTriangles(trianglesQ, 0xAA00BB);
 
-        // minkownski sum 
-        let polygonsMS = []
-        trianglesR.forEach((triangleR) => {
-            trianglesQ.forEach((triangleQ) => {
-                let polygonResult = this.polygonOperationHelper.minkownskiSumLinearAlgo(
-                    this.helperCalculus.getPositionCoordinatesList(triangleR.getPoints(), this.width, this.height, this.scale),
-                    this.helperCalculus.getPositionCoordinatesList(triangleQ.getPoints(), this.width, this.height, this.scale));
-    
-                polygonResult = this.helperCalculus.getCanvasCoordinatesList(polygonResult, this.width, this.height, this.scale);
-                polygonsMS.push(polygonResult);
-                this.resultPolygon.addPolygon(polygonResult, 0x00ff00, 0x00ff00, 0.25);
-            });
-        });
+        let convexR = this.polygonOperationHelper.isConvex(copyR);
+        let convexQ = this.polygonOperationHelper.isConvex(copyQ);
+        let unionOfPolygons;
+        let alpha = 0;
         
+        //non-convex non-convex
+        if (!convexR && !convexQ) {
+            console.log('Non Convex to Non Convex');
+            let trianglesR = this.polygonOperationHelper.triangulatePoly(copyR, []);
+            this.sourcePolygonR.addTriangles(trianglesR, 0xAA00BB);
+    
+            
+            let trianglesQ = this.polygonOperationHelper.triangulatePoly(copyQ, []);
+            this.sourcePolygonQ.addTriangles(trianglesQ, 0xAA00BB);
+    
+            // minkownski sum 
+            let polygonsMS = [];
+            trianglesR.forEach((triangleR) => {
+                trianglesQ.forEach((triangleQ) => {
+                    let polygonResult = this.polygonOperationHelper.minkownskiSumLinearAlgo(
+                        this.helperCalculus.getPositionCoordinatesList(triangleR.getPoints(), this.width, this.height, this.scale),
+                        this.helperCalculus.getPositionCoordinatesList(triangleQ.getPoints(), this.width, this.height, this.scale));
+        
+                    polygonResult = this.helperCalculus.getCanvasCoordinatesList(polygonResult, this.width, this.height, this.scale);
+                    polygonsMS.push(polygonResult);
+                    this.resultPolygon.addPolygon(polygonResult, 0x00ff00, 0x00ff00, 0.25);
+                });
+            });
 
+            // union polygons to get a final result
+            unionOfPolygons = polygonsMS[0];
+            for(let i = 1; i < polygonsMS.length; i++) {
+                let intersectionPoints, polygons;
+                this.polyUnionBuilder = new PolyUnionBuilder();
+                [intersectionPoints, polygons] = this.polyUnionBuilder.swapLineSegmentsIntersectionAlgo(unionOfPolygons, polygonsMS[i]);
+                for(let j = 0; j < polygons.length; j++){
+                    if (polygons[j].type === 'EXT_POLY') {
+                        unionOfPolygons = this.polyUnionBuilder.getPointsFromEdges(polygons[j].edges);
+                        break;
+                    }
+                };
+            }
+        } 
+        // non-convex convex
+        else if(!convexR && convexQ) {
+            unionOfPolygons = this._nonConvToConv(copyR, copyQ, this.sourcePolygonR);
+        }
+        // convex non-convex
+        else if(convexR && !convexQ) {
+            unionOfPolygons = this._nonConvToConv(copyQ, copyR, this.sourcePolygonQ);
+        }
+        // convex convex
+        else if (convexR && convexQ) {
+            console.log('Convex to Convex');
+            unionOfPolygons = this.polygonOperationHelper.minkownskiSumLinearAlgo(
+                this.helperCalculus.getPositionCoordinatesList(copyR, this.width, this.height, this.scale),
+                this.helperCalculus.getPositionCoordinatesList(copyQ, this.width, this.height, this.scale));
+            unionOfPolygons = this.helperCalculus.getCanvasCoordinatesList(unionOfPolygons, this.width, this.height, this.scale);
+            alpha = 0.25;
+        }
+        
         this.resultPolygon.addPolygon(this.sourcePolygonQ.getPoints(), 0x0000ff, 0x0000ff, 0.25);
         
-        // union polygons to get a final result
-        let unionOfPolygons = polygonsMS[0];
+        
 
-        for(let i = 1; i < polygonsMS.length; i++) {
-            let intersectionPoints, polygons;
-            this.polyUnionBuilder = new PolyUnionBuilder();
-            [intersectionPoints, polygons] = this.polyUnionBuilder.swapLineSegmentsIntersectionAlgo(unionOfPolygons, polygonsMS[i]);
-            for(let j = 0; j < polygons.length; j++){
-                if (polygons[j].type === 'EXT_POLY') {
-                    unionOfPolygons = this.polyUnionBuilder.getPointsFromEdges(polygons[j].edges);
-                    break;
-                }
-            };
-        }
-
-        this.resultPolygon.addPolygon(unionOfPolygons, 0x123456, 0x123456, 0.0);
+        this.resultPolygon.addPolygon(unionOfPolygons, 0xff0000, 0xff0000, alpha, 2);
     }
 }

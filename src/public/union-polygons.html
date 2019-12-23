@@ -1,8 +1,475 @@
-<script>
-    const polyUnionBuilder = new PolyUnionBuilder();
-    const puApp = new PolyUnionApp(polyUnionBuilder);
-</script>
-<button onclick="puApp.closePolyA()">Close Polygon A</button>
-<button onclick="puApp.closePolyB()">Close Polygon B</button>
-<button onclick="puApp.getUnion()">Union of A and B</button>
-<label id='mouse-coord'></label>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Simple Sidebar - Start Bootstrap Template</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+ 
+
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-light border-right" id="sidebar-wrapper">
+      <div class="sidebar-heading">Start Bootstrap </div>
+      <div class="list-group list-group-flush">
+        <a href="index.html" class="list-group-item list-group-item-action bg-light">Welcome</a>
+        <a href="minkownski-sum.html" class="list-group-item list-group-item-action bg-light">Minkowski Sums</a>
+        <a href="union-polygons.html" class="list-group-item list-group-item-action bg-light">Union of Polygons</a>
+        <a href="visibility-graph.html" class="list-group-item list-group-item-action bg-light">Visibility Graph</a>
+        <a href="all-together.html" class="list-group-item list-group-item-action bg-light">Putting all together</a>
+        <a href="references.html" class="list-group-item list-group-item-action bg-light">References</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    
+    <div id="page-content-wrapper" style="margin-bottom: 200px;">
+      <div class="container-fluid">
+            <h1>Union of Two Simple Polygons</h1>
+            <p>
+                In the previous section we have seen how to perform the Minkowski Sum of two non-convex polygons.
+                The non-convex polygons need to be triangulated and then Minkowski Sum
+                among all pairs of triangles should be calculated. Finally we take the <b>union</b> of all the resulting polygons in order 
+                to get a final polygon that represents the Minkowski Sum of the two aforementioned non-convex polygons.
+        
+                The goal of this section is to illustrate the algorithm of performing the union of two non-convex polygons.
+            </p>
+            <p>
+                Even though the idea of how to perform the union of two polygons can be found in the book "Computational Geometry in C - Joseph O'Rourke", 
+                it does not provide key details for the implementation. That is why an entire section explaining how to do it 
+                is dedicated here. Moreover the algorithm is not trivial.
+            </p>
+            <p>
+                The algorithm for calculating the union of two non-convex polygons is a modification of 
+                the Bentley-Ottmann sweepline algorithm. 
+            </p>
+            <h3>Bentley-Ottmann Sweepline Algorithm</h3>
+            <p>
+                The simple example that we can give about this algorithm is the one used for 
+                line segments intersections.
+            </p>
+            <p>
+                Briefly we can imagine a line \(L\) that sweeps all along a plane in the \(x\) coordinate. 
+                This line has information about the order of the segments \({S_1, S_2, ... , S_N}\) by \(y\) coordinate.
+                It stops each time one of the following <i>events</i> happen:
+                <ul>
+                    <li>
+                        It encounters the beginning of a segment \(S\).
+                    </li>
+                    <li>
+                        It encounters the end of a segment \(S\).
+                    </li>
+                    <li>
+                        It encounters an intersection of two segments.
+                    </li>
+                </ul>
+            </p>
+            <p>
+                The algorithm uses a priority queue \(Q\) that has all the events that will happen 
+                ordered by x coordinate and an AVl tree \(L\) which is a self-balanced binary search tree 
+                containing the information about the segments over the line ordered by y coordinate.
+            </p>
+            <p>
+                Thus when the line encounters the beginning of a segment it inserts it into the \(L\) tree,
+                it calculates if it intersects with the adjacents segments, if yes then it calculates the 
+                intersection point and it inserts it into \(Q\).
+                when the line finds the end of a segment it deletes it from \(L\). Finally when 
+                the line touches an intersection it swaps the intersecting segments in the \(L\) structure and 
+                calculates future intersections with the adjacent segments. The procedure continues until 
+                \(L\) and \(Q\) are empty.
+            </p>
+            <hr class="my-4">
+            <h3>Try it by yourself!</h3>
+            <ul>
+                <li>
+                    Click on canvas to make a point of a segment.
+                </li>
+                <li>
+                    Draw as many segments as you want and let them intersect with each other.
+                </li>
+                <li>
+                    Once your done click on Get Intersections button. It will execute the 
+                    Bentley-Ottmann Sweepline Algorithm and it will show you the 
+                    intersections marked as green points.
+                </li>
+                <li>
+                    Click on Clear Canvas to start again.
+                </li>
+            </ul>
+            <div class="text-center">
+                <div id="sweepLineApp"></div>
+                <button onclick="exec()" class="btn btn-primary">Get Intersections</button>
+                <button onclick="init()" class="btn btn-primary">Clean Canvas</button>
+            </div>
+            <hr class="my-4"/>
+            <h3>Bentley-Ottmann Sweepline Algorithm for Union of Two Simple Polygons</h3>
+            
+            
+            <p>
+                Given two simple polygons \(A\) and \(B\) calculate their union \(A \cup B\) which is a 
+                polygon containing the shape of both polygons.
+            </p>
+            <p>For understanding the main idea the problem will be simplified and thus assume the following:
+                </p>
+                <ul>
+                    <li>
+                        All the vertices of \(A\) and \(B\) lies in different \((x, y)\) coordinates.
+                    </li>
+                    <li>
+                        \(A\) and \(B\) does not have any vertical nor horizontal edge.
+                    </li>
+                    <li>
+                        Any vertex of \(A\) does not lie over any edge of \(B\) and viceversa. 
+                    </li>
+                </ul>
+            <p>
+                To use the same approach of the sweepline algorithm for segment intersections
+                the edges of the polygons \(A\) and \(B\) are represented as a set of segments.
+            </p>
+            <p>
+                The algorithm uses two AVL trees: one for the line status \(L\) and another for the 
+                events queue \(Q\). All the edges of \(A\) are labeled with the polygon's name to distinguish it from \(B\) and ordered by the smallest \(x\) coordinate.
+                Additionally each edge contains two points associated with the two vertices that connects. Thus each vertex has 
+                information about its position: <i>left</i> if the vertex lies on the left-side of the edge and 
+                <i>right</i> if the vertex is on the right-side of the edge in the x coordinate. Simetrically 
+                for polygon \(B\). Notice that each vertex is associated with exactly two edges. 
+                The events queue initializes with all the vertices of both polygons ordered by 
+                \(x\) coordinate.
+            </p>
+            <p>
+                There are four kinds of events:
+            </p>
+            <ul>
+                <li>
+                    Left-left: The next two points corresponds to the left-hand side of two edges.
+                </li>
+                <li>
+                    Right-right: The next two points corresponds to the right-hand side of two edges.
+                </li>
+                <li>
+                    Left-right: The next two points corresponds one to the left-hand and right-hand side of two edges respectively.
+                </li>
+                <li>
+                    Intersection: The next point porresponds to an intersection of \(A\) and \(B\) (there is no intersection between 
+                    the same polygon itself because we are dealing with simple polygons in this case).
+                </li>
+            </ul>
+            <p>
+                This concept is ilustrated below:
+            </p>
+            <div class="row text-center">
+                <div class="col">
+                    <p>
+                        Left-left event
+                    </p>
+                    <img src="img/left-left.png" width="150"/>
+                </div>
+                <div class="col">
+                    <p>
+                        Right-right event
+                    </p>
+                    <img src="img/right-right.png" width="150"/>
+                </div>
+                <div class="col">
+                    <p>
+                        Left-right event
+                    </p>
+                    <img src="img/left-right.png" width="250"/>
+                </div>
+                <div class="col">
+                    <p>
+                        Intersection event
+                    </p>
+                    <img src="img/intersection.png" width="400"/>
+                </div>
+            </div>
+            <p>
+                When a Left-left event happens, both edges are inserted into \(L\). In the case of a 
+                Right-right event both edges are deleted from \(L\). For a Left-right event 
+                the left edge is deleted and the right edge is inserted. Finally in case of an Intersection 
+                event both edges swap its position in \(L\). The future intersections are calculated and put them 
+                in the priority queue \(Q\) each time an edge is inserted in \(L\) or an Intersection event occurs. 
+            </p>
+            <p>
+                Additionally, each edge need to be tagged to be on the <b>exterior</b> or <b>interior</b> of the union polygon.
+                Each time a <b>Left-left event</b> is triggered at point \(x\) for polygon \(A\) (or \(B\) respectively), in order to categorize its edges correctly we need to 
+                count the edges of polygon \(B\) that are above the point \(x\) intersecting with the vertical line \(L\). If it is an 
+                even number then the new edges will be tagged as external or internal otherwise. This is achivable 
+                using the line status \(L\) structure. First we insert the edges into \(L\) and then count 
+                how many edges that correspond to that other polygon are above the inserted edge iterating through the previous nodes. 
+            </p>
+            <p>
+                An example is shown in the figure above with two polygons \(A\) in blue and \(B\) in orange. The blue point represents the Left-left event 
+                and the red points are the intersection points between the edges above \(x\) corresponding to the other polygon and the sweep line, this information is extracted from 
+                the \(L\) structure. The figure on the <b>left</b> shows that there is one edge above and thus the new edges are tagged as <b>internal</b>.
+                The figure on the <b>right</b> shows that there are two edges above and therefore the new edges are tagged as <b>external</b>
+            </p>
+            <div class="row text-center">
+                <div class="col">
+                    <p>
+                        Edges corresponding to \(x\) point are categorized as <b>Internal</b>
+                    </p>
+                    <img src="img/int-example.png" width="200"/>
+                </div>
+                <div class="col">
+                    <p>
+                        Edges corresponding to \(x\) point are categorized as <b>External</b>
+                    </p>
+                    <img src="img/ext-example.png" width="200"/>
+                </div>
+            </div>
+            <p>
+                When a <b>Left-right event</b> is triggered the right edges inherits the tag of the left edge. For instance, 
+                if the left edge was tagged as internal then the right edge will continue to be internal.
+            </p>
+            <p>
+                When an <b>Intersection event</b> is triggered the tag of the two edges are changed to the oposite as it is illustrated in the 
+                images below.
+            </p>
+            <div class="row text-center">
+                <div class="col">
+                    <img src="img/int-swap.png" width="200"/>
+                </div>
+                <div class="col">
+                    <img src="img/int-swap2.png" width="270"/>
+                </div>
+            </div>
+            <p>
+                Moreover the edges need to know information about its intersections. This is 
+                made when an intersection is detected, then both edges belonging to the intersection 
+                are related to each other together with the point of intersection. Thus, 
+                the construction of the Union Polygon is made when the line detects the following events:
+            </p>
+            <ul>
+                <li>
+                    Left-right event: if the left edge is external then add the edge corresponding to its last intersection 
+                    point or its left-most point to the right-most point into the Union Polygon.
+                </li>
+                <li>
+                    Right-right event: if both edges are external then add the edges corresponding to their last intersection 
+                    point or their left-most point to the right-most point into the Union Polygon.
+                </li>
+                <li>
+                    Intersection event: if one of the edges of the intersection is external 
+                    then add to the Union Polygon the edge corresponding to the last intersection on the external edge to 
+                    the current intersection point. If it has no intersection add the edge taken from its left-most point 
+                    to the current intersection point. If both edges are external repeat the aforementioned procedure 
+                    with both edges. 
+                </li>
+            </ul>
+            <p>
+                An example is shown above. The red point represents the intersection point. The blue point is the last 
+                intersection that both edges has seen. The green arrows represent the edges to be taken for the Union Polygon. 
+            </p>
+            <div class="text-center">
+                <img src="img/edge-to-take.png" width="500"/>
+            </div>
+            <p>
+                Thus the procedure ends when \(L\) and \(Q\) are empty.
+            </p>
+            <p>
+                Remember that the data structures used for \(L\) and \(Q\) are AVL trees and thus searching, insertion, 
+                deletion operations have a time complexity of \(O(log n)\).
+            </p>
+            <p>
+                The total number of events is \(2n + k\) = \(O(n + k)\) because for each edge we have two events happening:
+                an insertion and a deletion plus \(k\) intersections happening in total and therefore the length of \(Q\) is bounded 
+                by the same amount. Moreover each event is inserted or deleted once from \(Q\) and thus the total costs of mantaining 
+                \(Q\) is \(O((n+k)log(n+k))\). Additionally \(k=O(n^2)\) and thus \(O(log(n+k)) = O(log(n + n^2)) = O(log n + 2log n) = O(log n)\).
+                Thus the time complexity of \(Q\) is \(O((n+k)log n)\).
+            </p>
+            <p>
+                The time complexity of \(L\) is O(nlogn) because there are \(n\) edges inserted or deleted 
+                in \(O(logn)\). The total number of intersection calls is \(O(n + k)\) because the number 
+                of intersections is at most twice the number of events and each event results in at most 
+                two new edges adjacencies.  
+            </p>
+            <p>
+                Therefore the time complexity is \(O((n+k)log n)\) and the space complexity is \(O(n+k)\). <a href="http://dx.doi.org/10.1145/147508.147511">Chazelle & Edelsbrunner</a> 
+                have shown an optimal algorithm whose time complexity is \(O(nlogn + k)\) and <a href="http://dx.doi.org/10.1145/220279.220302">Balaban</a> shown that the space complexity 
+                is \(O(n)\).
+            </p>
+            <hr class="my-4"/>
+            <h3>Try it yourself!</h3>
+            <ul>
+                <li>
+                    Click on canvas to draw a vertex of the polygon.
+                </li>
+                <li>
+                    Click on the first vertex that you have drawn to close the polygon.
+                </li>
+                <li>
+                    Draw two polygons and click on Get Union button to get its union.
+                </li>
+                <li>
+                    Click on Clear Canvas button to start again.
+                </li>
+            </ul>
+           
+            <div class="row text-center">
+                <div class="col">
+                        <h3>Input</h3>
+                        
+                        <div id="polyUnionApp"></div>
+                        <button onclick="execUnion()" class="btn btn-primary">Get Union</button>
+                        <button onclick="initUnion()" class="btn btn-primary">Clear Canvas</button>
+                </div>
+                <div class="col">
+                    <h3>Output</h3>
+                    
+                    <div id="polyUnionAppOut"></div>
+                    <label id="polyUnionInfo"></label>
+                </div>
+            </div>
+
+            <br>
+            <p>
+                Notice that the union of two polygons can be a polygon with holes. For the robot path planning 
+                problem only the external polygon will be considered and therefore the holes will be ignored. 
+            </p>
+            <br>
+            <hr class="my-4"/>
+            <h3>Dealing with degeneracies</h3>
+            <p>
+                When calculating the Minkowski Sum of two non-convex polygons it is common to have degeneracy cases 
+                of the union of two polygons. Some of them are illustrated in the figures below. The green edges or points 
+                indicates where the degeneracy occurs.
+            </p>
+            <div class="row text-center">
+                <div class="col">
+                    <p>Two horizontal edges overlapping</p>
+                    <img src="img/deg-1.png" width="200"/>
+                </div>
+                <div class="col">
+                    <p>Three vertices of one polygon lies over the edges of the other one</p>
+                    <img src="img/deg-2.png" width="200"/>
+                </div>
+                <div class="col">
+                    <p>
+                        Two vertices lie in the same \((x,y)\) coordinates.
+                    </p>
+                    <img src="img/deg-3.png" width="300"/>
+                </div> 
+                <div class="col">
+                    <p>
+                        <p>Two edges overlapping</p>
+                    </p>
+                    <img src="img/deg-4.png" width="300"/>
+                </div> 
+            </div>
+            <p>
+                In order to deal with them without altering the complexity time of the algorithm
+                the vertices coordinates should be slightly altered when the event is triggered just 
+                before processing it.
+                For instance, let's take the right-most image as an example. We process the first Left-left event for one polygon 
+                so when the next Left-left event is triggered we should verify if the point is equal to the last-event-occurred point 
+                if that is the case then we should make a very little modification to the current \((x, y)\) point coordinates 
+                such that the vertex is infinitesimal different to the one of the other polygon (using randomness). This applies to all the degeneracy cases.
+            </p>
+            <p>
+                Notice that there is a problem with this approach. The resulting Union Polygon
+                would have more vertices 
+                than it should have. The problem is resolved iterating through all the vertices of the Union Polygon in 
+                counterclockwise (clockwise) order and if the current vertex and the next one are very close to each other 
+                then delete them from the Union Polygon, average their coordinates and add this new vertex to the Union Polygon. 
+            </p>
+      </div>
+      
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+
+   <!-- Custom styles for this template -->
+   <script src="https://unpkg.com/avl"></script>
+    <script src="/js/swaplineapp.js"></script>
+    <script src="/js/segment.js"></script>
+    <script src="/js/polyUnionApp.js"></script>
+
+    <script src="https://unpkg.com/avl"></script>
+    <link href="css/simple-sidebar.css" rel="stylesheet">
+    <script src="/scripts/pixi.min.js"></script>
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/application.js"></script>
+    <script src="/js/pointEvent.js"></script>
+    <script src="/js/triangle.js"></script>
+    <script src="/js/point.js"></script>
+    <script src="/js/pointEventDeactivated.js"></script>
+    <script src="/js/helperCalculus.js"></script>
+    <script src="/js/inverseGridApplication.js"></script>
+    <script src="/js/polygonOperationHelper.js"></script>
+    <script src="/js/minkowskiSumApp.js"></script>
+    <script src="/js/polyUnionBuilder.js"></script>
+    <script src="/js/msNonConvex.js"></script>
+    <script src="/js/SweepLineBuilder.js"></script>
+    <!-- C-Obstacle demonstration -->
+     
+    <script> 
+        let sl, puApp ;
+        
+
+        function initUnion(polyA, polyB) {
+            document.getElementById('polyUnionApp').innerHTML = "";
+            document.getElementById('polyUnionAppOut').innerHTML = "";
+            document.getElementById('polyUnionInfo').innerHTML = "";
+            let polyUnionBuilder = new PolyUnionBuilder();
+            puApp = new PolyUnionApp(polyUnionBuilder, 'polyUnionApp', 'polyUnionAppOut', polyA, polyB);
+        }
+
+        function execUnion() {
+            let poly, holes;
+            [poly, holes] = puApp.getUnion();
+            document.getElementById('polyUnionInfo').innerHTML = `${poly} polygon with ${holes} hole(s).`;
+        }
+        function init(defaultSegments) {
+            document.getElementById('sweepLineApp').innerHTML = '';
+            const sweepLineBuilder = new SweepLineBuilder();
+            sl = new SwapLineApp(sweepLineBuilder, 'sweepLineApp', defaultSegments);
+        }
+        
+        function exec() {
+            sl.execute();
+        }
+
+        init(JSON.parse("[{\"a\":{\"id\":null,\"x\":45,\"y\":80},\"b\":{\"id\":null,\"x\":352,\"y\":138},\"polyName\":null},{\"a\":{\"id\":null,\"x\":136,\"y\":199},\"b\":{\"id\":null,\"x\":296,\"y\":106},\"polyName\":null},{\"a\":{\"id\":null,\"x\":86,\"y\":136},\"b\":{\"id\":null,\"x\":319,\"y\":180},\"polyName\":null},{\"a\":{\"id\":null,\"x\":169,\"y\":265},\"b\":{\"id\":null,\"x\":240,\"y\":54},\"polyName\":null},{\"a\":{\"id\":null,\"x\":60,\"y\":280},\"b\":{\"id\":null,\"x\":257,\"y\":302},\"polyName\":null},{\"a\":{\"id\":null,\"x\":79,\"y\":330},\"b\":{\"id\":null,\"x\":280,\"y\":263},\"polyName\":null},{\"a\":{\"id\":null,\"x\":201,\"y\":340},\"b\":{\"id\":null,\"x\":243,\"y\":240},\"polyName\":null},{\"a\":{\"id\":null,\"x\":268,\"y\":222},\"b\":{\"id\":null,\"x\":278,\"y\":371},\"polyName\":null},{\"a\":{\"id\":null,\"x\":367,\"y\":317},\"b\":{\"id\":null,\"x\":62,\"y\":46},\"polyName\":null}]"));
+        exec();
+
+        initUnion(
+            JSON.parse("[{\"id\":null,\"x\":206.25,\"y\":100},{\"id\":null,\"x\":105.25,\"y\":187},{\"id\":null,\"x\":158.25,\"y\":313},{\"id\":null,\"x\":416.25,\"y\":298},{\"id\":null,\"x\":271.25,\"y\":210},{\"id\":null,\"x\":436.25,\"y\":112}]"),
+            JSON.parse("[{\"id\":null,\"x\":333.25,\"y\":58},{\"id\":null,\"x\":324.25,\"y\":390},{\"id\":null,\"x\":451.25,\"y\":215}]")
+            );
+        execUnion();
+
+    </script>
+
+
+  <script src="/js/load-mathx.js" async></script>
+
+  <!-- Menu Toggle Script -->
+  <script>
+    $("#menu-toggle").click(function(e) {
+      e.preventDefault();
+      $("#wrapper").toggleClass("toggled");
+    });
+  </script>
+</body>
+
+</html>

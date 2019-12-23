@@ -120,11 +120,11 @@ class GridApplication {
         this.app.stage.removeChild(poly);
     }
 
-    addPolygon(points, colorLine, colorPoints, radiusPoint) {
+    addPolygon(points, colorLine, colorPoints, radiusPoint, linewidth=1) {
         let polygon = new PIXI.Graphics();
         
         polygon.beginFill(colorPoints, radiusPoint);
-        polygon.lineStyle(1, colorLine, 1);
+        polygon.lineStyle(linewidth, colorLine, 1);
 
         polygon.moveTo(points[0].x, points[0].y);
         points.slice(1, points.length).forEach(point => {

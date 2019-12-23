@@ -39,7 +39,29 @@
     <!-- Page Content -->
     <div id="page-content-wrapper">
       <div class="container-fluid">
-        Visibility Graph! 
+        <h1>Visibility Graph</h1>
+        <p>
+          Polygons and obstacles will be treated equally.
+        </p>
+        <p>
+          A vertex \(p_1\) that belongs to a polygon \(P\) is visible from vertex 
+          \(q_1\) that belongs to a polygon \(Q\) if the open segment going from \(p_1\) 
+          to \(q_1\) does not intersect with any other edge.
+        </p>
+        <p>
+          The Visibility Graph of a set of polygons \({P_1, P_2, ..., P_n}\) is the 
+          set of arcs that connects all the visible vertices. 
+        </p>
+        <p>
+          The naive algorithm iterates each vertex of every polygon and it verifies its visibility 
+          against all other vertices. At each verification step the segment formed 
+          from one vertex to another should test that there is not any intersection
+          with any other polygon. Thus the time complexity of this algorithm is \(O(n^3)\) where 
+          \(n\) is the total number of vertices. Other algorithms can compute the 
+          visibility graph in \(O(n^2log n)\) using a rotational 
+          sweep line to verify each vertex visibility.
+        </p>
+        <div id="visibilityGraphApp"></div>
       </div>
     </div>
     <!-- /#page-content-wrapper -->
@@ -50,23 +72,33 @@
   <!-- Bootstrap core JavaScript -->
   <script src="vendor/jquery/jquery.min.js"></script>
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <!-- <script src="https://unpkg.com/avl"></script>
+  <script src="/js/visibilityGraphApp.js"></script>
+  <script src="/js/polygon.js"></script>
   <script src="/scripts/pixi.min.js"></script>
+  <script src="/js/point.js"></script>
+  <script src="/js/polygonOperationHelper.js"></script>
+  <!-- <script src="https://unpkg.com/avl"></script>
+
   <script src="/js/triangle.js"></script>
   <script src="/js/application.js"></script>
-  <script src="/js/point.js"></script>
+  
   <script src="/js/pointEvent.js"></script>
   <script src="/js/pointEventDeactivated.js"></script>
   <script src="/js/helperCalculus.js"></script>
   <script src="/js/inverseGridApplication.js"></script>
-  <script src="/js/polygonOperationHelper.js"></script>
+  
   <script src="/js/minkowskiSumApp.js"></script>
   <script src="/js/swaplineapp.js"></script>
   <script src="/js/segment.js"></script>
   <script src="/js/polyUnionBuilder.js"></script>
   <script src="/js/polyUnionApp.js"></script> -->
+  <script>
+    let polyOpHelper = new PolygonOperationHelper();
+    let vgraph = new VisibilityGraphApp(polyOpHelper, 'visibilityGraphApp');
+  </script>
 
   <!-- Menu Toggle Script -->
+  <script src="/js/load-mathx.js" async></script>
   <script>
     $("#menu-toggle").click(function(e) {
       e.preventDefault();

@@ -36,7 +36,7 @@
     <!-- /#sidebar-wrapper -->
 
     <!-- Page Content -->
-    <div id="page-content-wrapper">
+    <div id="page-content-wrapper" style="margin-bottom: 200px;">
       <div class="container-fluid">
         
         <h1>Minkonswki Sums</h1>
@@ -130,14 +130,14 @@
             </div>
         </div>
 
-        <h3>Minkowski Sum</h3>
+        <h3>Minkowski Sum for Convex Polygons</h3>
         
         <div class="row">
             <div class="col-sm-4">
                 <div class="card">
                     <div class="card-body">
                         <p>
-                            <b>Minkownski Sum Algorithm</b> <br>
+                            <b>Minkownski Sum Algorithm: Naive approach</b> <br>
                         </p>
                         <hr class="my-4"/>
                         <p>
@@ -170,7 +170,8 @@
                 </p>
                 <p>
                     Thus the time complexity of the algorithm is \(O(nm)\) where \(n\) and \(m\) 
-                    are the number of elements of \(S_1\) and \(S_2\) respectively.
+                    are the number of vertices of \(S_1\) and \(S_2\) respectively because we need to
+                    sum all the pairwise vertices that results into \(nm\) operations. 
                 </p>
                 <p>
                     This algorithm has two main issues:
@@ -254,11 +255,480 @@
                 <div id="polyResult"></div>
             </div>
         </div>
+        <hr class="my-4"/>
+
+        <p>
+            If we experiment with the application we can notice the following observation.
+        </p>
+        <div id="obs1">
+            <b>Observation 1</b>
+        </div>
+        <p>
+            Let \(P\) and \(R\) two convex polygons. Let \(CP= P \oplus R \) be the Minkowski Sum.
+            An extreme point of \(CP\) in direction \( \overrightarrow{\text{d}}\) corresponds to the sum 
+            of the two extreme points of \(P\) and 
+            \(R\) in the same direction.
+        </p>
+        <div class="text-center">
+            <img src="img/obs1.png" width="300"/>
+        </div>
+        <p>
+            The yellow vectors determine the position of the extremes points of polygons following the 
+            direction \(\overrightarrow{\text{d}}\). As the lector can see the extreme point in 
+            direction \(\overrightarrow{\text{d}}\) of the 
+            Minkowski Sum polygon  corresponds to the sum of the two previous extreme 
+            points.
+        </p>
+
+        <b>Theorem 2</b>
+        <p>
+            Let \(P\) and \(Q\) be two convex polygons with \(n\) and \(m\) edges.
+            The Minkownski Sum polygon \(CP = P \oplus R\)
+            will be a convex polygon with at most \(m + n\) polygons.
+        </p>
+
+        <p>
+            <a class="btn btn-info" data-toggle="collapse" href="#theorem2" role="button" aria-expanded="false" aria-controls="multiCollapseExample2">Show Proof</a>
+        </p>
+        <div class="row">
+            <div class="col">
+                <div class="collapse multi-collapse" id="theorem2">
+                <div class="jumbotron">
+                    <p>
+                        By definition, the Minkownski Sum of two convex polygons is a convex polygon.
+                    </p>
+                    <p>
+                        If none of the edges of \(P\) and \(R\) are parallel to each other, \(CP\)
+                        will hace exactly \(m + n\) edges. Let \(e\) be an edge in \(P\) and  let
+                        \(r\) be an extreme point in \(R\).
+                        The edge \(e_{CP} = e \oplus r\) will take the same direction that \(e\) in \(CP\)
+                        because it is only translated by an extreme point in \(R\). Thus each edge of
+                        \(CP\) has the same direction as one of the edges of \(P\) or \(R\) 
+                        translated by an extreme point of \(R\) or \(P\) so the number of edges
+                        of \(CP\) will be \(m + n\).
+                    </p>
+                    <p>
+                        If one edge of \(P\) is parallel to one of \(R\), \(CP\) will have
+                        less than \(m + n\) edges because the sum of those two edges
+                        will become one edge in \(CP\).
+                    </p>
+                    <div class="text-center">
+                        <img src="img/th2.png" width="300"/>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
         
+        <div>
+            <p>
+            Two objects \(P1\) and \(P2\) bounded by a simple closed curve are called <b>pseudodiscs</b>
+            if their boundaries \(\delta P1, \delta P2\) intersects in at most two points. A <b>collection 
+            of pseudodiscs</b> is made by a collection of simple-closed-curve objects that are 
+            pairwise pseudodiscs. The image below shows two objects that are pseudodiscs with two 
+            intersection points in yellow.
+            </p>
+            <div class="text-center">
+                <img src="img/pseudodiscs.png" width="400"/>
+            </div>
+            <b>Observation 2</b>
+            <p>
+                A point \(p\) is a <b>boundary crossing</b> if \(p \in \delta P1 \cap \delta P2 \) and 
+                \(\delta P1\) crosses from the interior of \(P2\) to the exterior of \(P2\) at \(p\).
+                Thus a pair of polygonal pseudodiscs \(P, P^\prime\) has at most two boundary crossings.
+            </p>
 
+            <p>
+                The unit cycle centered at the origin will be used to determine the 
+                direction of an extreme point \(p\) using a vector that goes 
+                from the origin to \(p\). We also define the <b>range of directions</b>
+                \(range(\overrightarrow{\text{d1}}, \overrightarrow{\text{d2}})\) as 
+                the set of all points going from \(\overrightarrow{\text{d1}}\) to 
+                \(\overrightarrow{\text{d2}}\) following the unit cycle boundary in 
+                anticlockwise direction. Thus 
+                \(range(\overrightarrow{\text{d1}}, \overrightarrow{\text{d2}}) \neq range(\overrightarrow{\text{d2}}, \overrightarrow{\text{d1}})\)
+            </p>
+            <div class="text-center">
+                    <img src="img/directions.png" width="500"/>
+            </div>
 
-       
+            <div id="obs3">
+                <b>Observation 3</b>
+            </div>
+            
+            <p>
+                Let \(P1\) and \(P2\) be two convex polygons with disjoint interiors. 
+                Let \(\overrightarrow{\text{d1}}\) be the direction in which \(P1\) is more extreme 
+                than \(P2\) and let \(\overrightarrow{\text{d2}}\) be the direction in which \(P2\)
+                is more extreme than \(P1\). Thus \(P1\) is more extreme in all directions of
+                 \(range(\overrightarrow{\text{d1}}, \overrightarrow{\text{d2}})\)
+                or it is in \(range(\overrightarrow{\text{d2}}, \overrightarrow{\text{d1}})\).
+            </p>
+            <p>
+                In the example below, for all the directions in
+                \(range(\overrightarrow{\text{d3}}, \overrightarrow{\text{d1}})\), \(P1\) is more
+                extreme than \(P2\). For \(range(\overrightarrow{\text{d2}}, \overrightarrow{\text{d3}})\)
+                \(P2\) is more extreme. For \(range(\overrightarrow{\text{d1}}, \overrightarrow{\text{d2}})\)
+                both \(P1\) and \(P2\) are equally extreme. 
+            </p>
+            <div class="text-center">
+                <img src="img/directions2.png" width="500"/>
+            </div>
 
+            <b>Theorem 3</b>
+            <p>
+                Let P1, P2, and R be convex polygons such that both P1 and P2 have disjoint interiors. Then the two 
+                Minkowski Sums \(P1 \oplus R\) and \(P2 \oplus R\) are pseudodiscs.
+            </p>
+
+            <p>
+                <a class="btn btn-info" data-toggle="collapse" href="#theorem3" role="button" aria-expanded="false" aria-controls="multiCollapseExample3">Show Proof</a>
+            </p>
+            <div class="row">
+                <div class="col">
+                    <div class="collapse multi-collapse" id="theorem3">
+                    <div class="jumbotron">
+                        <p>
+                            Let \(CP1 = P1 \oplus R\) and \(CP2 = P2 \oplus R\) be the corresponding 
+                            Minkownski Sums. It suffices to proof that there exists at most two bondary 
+                            crossings where \(\delta CP1\) crosses the interior of \(CP2\) to the exterior
+                            of P2 at exactly two points \(p\) and \(q\).
+                        </p>
+                        <p>
+                            By contradiction assume that this is not true. Thus there are four directions
+                            \(\overrightarrow{\text{d}_p}, \overrightarrow{\text{d}_q}, \overrightarrow{\text{d}_r}, \overrightarrow{\text{d}_s}\)
+                            situated outer normals of points \(p, q, r, s \in \delta CP1\) respectively with \(p, r \in \) interior of 
+                            \(CP2\) and \(q, s \not\in \) interior of \(CP2\). Thus \(CP2\) is more extreme 
+                            in \(range(\overrightarrow{\text{d}_p}, \overrightarrow{\text{d}_r})\)
+                            while \(CP2\) is more extreme in \(range(\overrightarrow{\text{d}_q}, \overrightarrow{\text{d}_s})\).
+                            From <a href="#obs1">observation 1</a>  \(P1\) is more extreme than \(P2\) in \(range(\overrightarrow{\text{d}_p}, \overrightarrow{\text{d}_r})\)
+                            and not more extreme in \(range(\overrightarrow{\text{d}_q}, \overrightarrow{\text{d}_s})\) which 
+                            contradicts <a href="#obs3">observation 3</a>.
+                        </p>
+                        <div class="text-center">
+                            <img src="img/2-boundaries.png" width="300">
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div id="th4"> 
+                <b>Theorem 4</b>
+            </div>
+            <p>
+                Let \(S\) be a collection of convex polygons with \(n\) edges in total. Then the complexity 
+                    of their union is at most \(2n\).
+            </p>
+            <!-- <p>
+                <a class="btn btn-info" data-toggle="collapse" href="#theorem4" role="button" aria-expanded="false" aria-controls="multiCollapseExample4">Show Proof</a>
+            </p>
+            <div class="row">
+                <div class="col">
+                    <div class="collapse multi-collapse" id="theorem4">
+                    <div class="jumbotron">
+                        
+                    </div>
+                    </div>
+                </div>
+            </div> -->
+            <p>
+                With all these concepts in mind we
+                 are now ready to define an algorithm for calculating the Minkowski Sums between 
+                two convex polygons that beats the \(O(nm)\) algorithm previously found.
+            </p>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <p>
+                                <b>Minkownski Sum Algorithm: Linear approach</b> <br>
+                            </p>
+                            <hr class="my-4"/>
+                            <p>
+                                <b>Inputs:</b> Two convex polygons \(S1, S2\) with vertices
+                                \((v_1, v_2, ..., v_n)\) and \((w_1, w_2, ..., w_m)\) vertices 
+                                respectively. The vertices are counterclockwise ordered 
+                                with v_1 and w_1 to be the smallest y-coordinate vertices 
+                                (and smallest x coordinates in case of ties).<br>
+                                <b>Output:</b> \(S_{res} = S1 \oplus S2\)<br>
+                                <br>
+                                \(S_{res} \leftarrow\)  []<br>
+                                \(i \leftarrow 1\)<br>
+                                \(j \leftarrow 1\)<br>
+                                \(v_{n+1} \leftarrow v_1\)<br>
+                                \(v_{n+2} \leftarrow v_2\)<br>
+                                \(w_{m+1} \leftarrow w_1\)<br>
+                                \(w_{m+2} \leftarrow w_2\)<br>
+                                <b>repeat while</b> (\(i \leq n+1\) <b>and</b> \(j \leq m+1\)):<br>
+                                &emsp;&emsp;<b>Add</b> \(v_i + w_j\) <b>to</b> \(S_{res}\) <br>
+                                &emsp;&emsp;<b>if</b> \(angle(v_i, v_{i+1}) < angle(w_j, w_{j+1})\)<br>
+                                &emsp;&emsp;<b>then</b> \(i \leftarrow i + 1\)<br>
+                                &emsp;&emsp;<br>
+                                &emsp;&emsp;<b>else if \(angle(v_i, v_{i+1}) > angle(w_j, w_{j+1})\)</b>
+                                &emsp;&emsp;<b>then</b> \(j \leftarrow j + 1\)<br>
+                                &emsp;&emsp;<br>
+                                &emsp;&emsp;<b>else</b> \(i \leftarrow i + 1\); \(j \leftarrow j + 1\)<br>
+                                <br>
+                                <b>return</b> \(S_{res}\)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <p>
+
+                        The idea of the algorithm is to exploit the fact that a vertex in the Mikowski Sum
+                        comes from the sum of two extreme vertices from the original polygons that are in the same directions.
+                    </p>
+                    <p>
+                        This algorithm runs in linear time because at each repetition it increases either \(i\) 
+                        or \(j\) until it has visited all the vertex of \(S1\) and \(S2\). The algorithm has an elegant way to avoid 
+                        <b>if</b> conditions in order to include the
+                        cyclic structure of the relation between the last and the first vertex of a polygon as part of the verification process. 
+                        The function \(angle(a, b)\) calculates the angle between \(a\) and \(b\) using the x-axis on \(a\) as a
+                        reference point. 
+                    </p>
+                    <div class="text-center">
+                        <img src="img/angle.png" width="300">
+                    </div>
+                    <div id="th5">
+                        <b>Theorem 5</b>
+                    </div>
+                    <p>
+                        The Minkowski Sum of two convex polygons with \(n\) and \(m\) vertices can be
+                        computed in \(O(n+m)\) time.
+                    </p>
+                    <p>
+                        That is much better than the previous algorithm found but still it only works 
+                        when the two polygons are convex. In the next section we will deal with 
+                        non-convex polygons. 
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4">
+
+            <div>
+                <h3>Minkownski Sum for Non-convex Polygons</h3>
+                <p>
+                    The Minkowski Sum has the property to be distributive. More formally:
+                    given three sets \(S_1, S_2, S_3\), we have
+                    \(S_1 \oplus (S_2 \cup S_3) = (S_1 \oplus S_2) \cup (S_1 \oplus S_3)\).
+                </p>
+                <p>
+                    A non-convex polygon of \(n\) vertices can be triangulated with \(n-2\) triangles.
+                    Take a polygon with \(n=4\), it can be triangulated with 2 triangles.
+                    Then take a polygon with \(n=5\), it can be triangulated with 3 triangles and 
+                    so on. 
+                </p>
+                <p>
+                    In order to calculate the Minkowski Sum of \(R\) and \(P\) such that the former 
+                    is a non-convex polygon and the later is a convex polygon with \(n\) and 
+                    \(m\) edges respectively triangulate \(R\) which give \(t_{n-2}\) triangles
+                     and taking advantage of the distributive property of Minkowski Sums it suffices 
+                    to calculate:
+                    $$ R \oplus P = \bigcup_{i=1}^{n-2}t_i \oplus P = (t_1 \oplus P) \cup 
+                    (t_2 \oplus P) \cup ... \cup (t_{n-2} \oplus P)
+                    $$
+                </p>
+                <p>
+                    The triangles used for triangulating \(R\) have disjoint interiors. Thus the 
+                    collection of Minkowski Sums is a collection of pseudodiscs. By <a href="#th4">theorem 4</a>
+                    the complexity of their union is then linear in the sum of their complexities. Thus 
+                    \(R \oplus P\) has a time complexity of \(O(nm)\)
+                </p>
+                <p>
+                    Another way to look at it is calculating the Minkowski Sum of \(t_1 \oplus P\) with 
+                    \(t_1\) as the first triangle resulting of triangulating 
+                    \(R\) and P as a convex polygon with \(m\) edges and therefore the time 
+                    complexity of this individual sum will be \(O(3 + m)\) because of <a href="#th5">theorem 5</a>. 
+                    Repeat the process for the other n-3\(th\) triangles (\(t_2, t_3, ..., t_{n-2} \))
+                    and thus the total time complexity will be the sum of
+                    their individual complexities: \(\overbrace{O(3+m) + O(3+m) + ... + O(3+m)}^\text{n-2 times}\) 
+                     which leads to the \(O(nm)\).
+                </p>
+            </div>
+            <div>
+                <p>
+                    The complexity of a non-convex and a convex polygon is tight in the worst case. To see this 
+                    let \(R\) be a convex polygon with \(m\) vertices and let \(Q\) be a non-convex polygon 
+                    with \(n\) vertices and \(\lfloor\frac{n}{2}\rfloor\) spikes and \(R\) be smaller than \(Q\). Thus \(R \oplus Q\) will have 
+                    \(\lfloor\frac{n}{2}\rfloor\) spikes with \(m\) vertices at the top of each spike as it is illustrated in 
+                    the image above.
+                </p>
+            </div>
+            <div class="row text-center">
+                <div class="col">
+                    <p>
+                        Polygon R
+                    </p>
+                    <img src="img/boundTight1.png" width="300"/>
+                </div>
+                <div class="col">
+                    <p>
+                        Polygon Q partitioned into 7 triangles
+                    </p>
+                    <img src="img/boundTight2.png" width="300"/>
+                </div>
+                <div class="col">
+                    <p>
+                        \(R \oplus Q\)  in red and intermediate Minkownski Sums in green.
+                    </p>
+                    <img src="img/boundTight3.png" width="300"/>
+                </div>
+            </div>
+            <br>
+            <div>
+                <p>
+                    What if we want to calculate the Minkownski Sum for two non-convex polygons? 
+                    Let \(R\) and \(Q\) be two non-convex polygons with \(m\) and \(n\) edges respectively.
+                    In order to calculate \(R \oplus Q\) it suffices to triangulate 
+                    \(R\) and \(Q\) in \(r_{m-2}\) and \(q_{n-2}\) triangles and thus apply the pairwise 
+                    Minkowski Sum and finally get their union of the \((m-2)(n-2)\) polygons. Hence the 
+                    total complexity of \(R \oplus Q\) will be \(O(n^2m^2)\) which is 
+                    tight in the worst case. For instance, consider the example below:
+                </p>
+                <p>
+                    <ul>
+                        <li>
+                            Number of blue spikes: 3
+                        </li>
+                        <li>
+                            Number of red spikes: 2
+                        </li>
+                        <li>
+                            Number of white squares resulting of the Minkowski Sum between the blue and the red polygons: \(2^2 \times 3^2 = 36\).
+                        </li>
+                    </ul>
+                </p>
+                <div class="text-center">
+                    <img src="img/lowerboundnc.png" width="300"/>
+                    <p>
+                        Source: <a href="http://acg.cs.tau.ac.il/courses/algorithmic-robotics/spring-2011/slides/ms.pdf">Algorithms Robotics</a>
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p>
+                    <b>Minkownski Sum Algorithm for non-convex polygons</b> <br>
+                </p>
+                <hr class="my-4"/>
+                <p>
+                    <b>Inputs:</b> Two non-convex polygons \(S1, S2\) with \(m\) and \(n\) vertices respectively.<br>
+                    <b>Output:</b> \(S_{res} = S1 \oplus S2\)<br>
+                    <br>
+                    <br>
+                    \(S_{res} \leftarrow\)  []<br>
+                    \(polygonsMS \leftarrow []\) <br>
+                    \(triangles_{S1} \leftarrow triangulate(S1)\) <br>
+                    \(triangles_{S2} \leftarrow triangulate(S2)\) <br>
+                    <br>
+                    <b>for each</b> \(t_{S1}\) <b>in</b> \(triangles_{S1}\)<br>
+                    &emsp;&emsp;<b>for each</b> \(t_{S2}\) <b>in</b> \(triangles_{S2}\)<br>
+                    &emsp;&emsp;&emsp;&emsp;<b>Add</b> \(MinkowskiSum(t_{S1},t_{S2}) \) <b>to</b> \(polygonsMS\)<br>
+                    <br>
+                    \(S_{res} \leftarrow polygonsMS[0]\)<br>
+
+                    <b>for</b> \(i=1\) <b>to</b> \(i <\)  <b>length of</b> \(polygonsMS\)<br>
+                    &emsp;&emsp;\(S_{res} \leftarrow Union(S_{res}, polygonsMS[i])\)<br>
+                    &emsp;&emsp;\(i++\)<br>
+
+                    <br>
+                    <b>return</b> \(S_{res}\)<br>
+                </p>
+            </div>
+        </div>
+        <hr class="my-4">
+        <h3>
+            Try it by yourself!
+        </h3>
+        <div>
+            <ul>
+                <li>
+                    Draw two convex or non-convex polygons. A click on the canvas creates a vertex. 
+                    In order to close de polygon click on the first vertex that you have drawn.
+                </li>
+                <li>
+                    Clicking on Minkowski Sum button will calculate the Minkowski Sum between the two 
+                    previously introduced polygons. 
+                </li>
+                <li>
+                    The polygons will be triangulated if they are non-convex.
+                </li>
+                <li>
+                    Click on Clean Canvas button to start again.
+                </li>
+            </ul>
+        </div>
+        <hr class="my-4">
+        <h3>Inputs: </h3>
+        <div class="row">
+            <div class="col text-center">
+                <div>
+                    <p>
+                        A convex or non-convex polygon \(R\).
+                    </p>
+                </div>
+                <div id="msPolyA"></div>
+            </div>
+            <div class="col text-center">
+                <div>
+                    <p>
+                        A convex or non-convex polygon \(P\).
+                    </p>
+                </div>
+                <div id="msPolyB"></div>
+            </div>
+        </div>
+        <div class="text-center">
+                <button onclick="execMS();" class="btn btn-primary">Get Minkowski Sum</button>
+                <button onclick="cleanMS();" class="btn btn-primary">Clean Canvas</button>
+            </div>
+        <hr class="my-4">
+        <h3>Outputs: </h3>
+        <div class="text-center">
+            <p>
+                Green Polygons are the pairwise Mikowski Sums resulting from each
+                triangle of polygon \(R\) and \(P\) in the case that both are non-convex polygons.
+                The red polygon represents \(R \oplus P\).
+            </p>
+            <div id="msRes"></div>
+        </div>
+      </div>
+      <div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th colspan="3">
+                            Time Complexities for Minkowski Sum
+                        </th>
+                    </tr>
+                    <tr>
+                        <th scope="col">Polygon \(A\) with \(n\) vertices</th>
+                        <th scope="col">Polygon \(B\) with \(m\) vertices</th>
+                        <th scope="col">Complexity of \(A \oplus B\)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Convex</td>
+                        <td>Convex</td>
+                        <td>\(O(n+m)\)</td>
+                    </tr>
+                    <tr>
+                        <td>Convex</td>
+                        <td>Non-convex</td>
+                        <td>\(O(nm)\)</td>
+                    </tr>
+                    <tr>
+                        <td>Non-convex</td>
+                        <td>Non-convex</td>
+                        <td>\(O(n^2m^2)\)</td>
+                    </tr>
+                </tbody>
+            </table>
       </div>
     </div>
     <!-- /#page-content-wrapper -->
@@ -267,16 +737,13 @@
   <!-- /#wrapper -->
 
   <!-- Bootstrap core JavaScript -->
-  
-  <!-- <script src="https://unpkg.com/avl"></script>
-  
-  
-  <script src="/js/swaplineapp.js"></script>
-  <script src="/js/segment.js"></script>
-
-  <script src="/js/polyUnionApp.js"></script> -->
 
    <!-- Custom styles for this template -->
+   <script src="https://unpkg.com/avl"></script>
+  <script src="/js/swaplineapp.js"></script>
+  <script src="/js/segment.js"></script>
+  <script src="/js/polyUnionApp.js"></script>
+
    <script src="https://unpkg.com/avl"></script>
    <link href="css/simple-sidebar.css" rel="stylesheet">
    <script src="/scripts/pixi.min.js"></script>
@@ -292,18 +759,19 @@
    <script src="/js/polygonOperationHelper.js"></script>
    <script src="/js/minkowskiSumApp.js"></script>
    <script src="/js/polyUnionBuilder.js"></script>
+   <script src="/js/msNonConvex.js"></script>
 
     <!-- C-Obstacle demonstration -->
      
     <script> 
-        let diff, minkowskiSumApp;
+        let diff, minkowskiSumApp, minkowskiSumAppNonConvex;
+        const width = 360, height = 400, scale = 10;
         function init(defaultInit) {
             document.getElementById('polyA').innerHTML = "";
             document.getElementById('polyB').innerHTML = "";
             document.getElementById('polyAInverted').innerHTML = "";
             document.getElementById('polyResult').innerHTML = "";
             document.getElementById('polyResult2').innerHTML = "";
-            const width = 360, height = 400, scale = 10;
             const app = new GridApplication(PIXI, width, height, new PointEvent(), new HelperCalculus(), true, scale, 0x0000ff,'polyA');
             const app2 = new GridApplication(PIXI, width, height, new PointEvent(), new HelperCalculus(), true, scale, 0x00ff00, 'polyB');
             
@@ -316,12 +784,31 @@
             minkowskiSumApp2 = new MinkowskiSumApp(res1, app2, res3, app, new HelperCalculus(), new PolygonOperationHelper(), new PolyUnionBuilder(), width, height, scale, defaultInit);
         }
 
+        function initMS(defaultInit) {
+            const rPolygonCanvas = new GridApplication(PIXI, width, height, new PointEvent(), new HelperCalculus(), true, scale, 0x0000ff, 'msPolyA');
+            const qPolygonCanvas = new GridApplication(PIXI, width, height, new PointEvent(), new HelperCalculus(), true, scale, 0x00ff00, 'msPolyB');
+            const resPolygonCanvas = new GridApplication(PIXI, width, height, new PointEventDeactivated(), new HelperCalculus(), false, scale, 0xff0000, 'msRes');
+            minkowskiSumAppNonConvex = new msNonConvex(rPolygonCanvas, qPolygonCanvas, resPolygonCanvas,  new HelperCalculus(), new PolygonOperationHelper(), new PolyUnionBuilder(), width, height, scale, defaultInit);
+        }
+
         function exec() {
             diff.getInverse();
             minkowskiSumApp.bruteForceAlgo();
             minkowskiSumApp2.bruteForceAlgo();
         }
+
+        function cleanMS() {
+            document.getElementById('msPolyA').innerHTML = "";
+            document.getElementById('msPolyB').innerHTML = "";
+            document.getElementById('msRes').innerHTML = "";
+            initMS(false);
+        }
+
+        function execMS() {
+            minkowskiSumAppNonConvex.linearAlgoNonConvex();
+        }
         init(true);
+        initMS(true);
     </script>
 
 

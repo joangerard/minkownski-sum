@@ -212,6 +212,35 @@ class PolygonOperationHelper {
 
         return 0;
     }
+    
+    isConvex(points) {
+        let lastSense = null;
+        let changes = 0, sense = null;
+        if (points.length <= 3) {
+            return true;
+        }
+        for(let i = 0; i < points.length - 2; i++) {
+            sense = this.getDeterminant(points[i], points[i+1], points[i+2]) < 0;
+            if (lastSense!=sense) {
+                changes++;
+            }
+            if (changes >= 2) {
+                return false;
+            }
+            lastSense = sense;
+        }
+        sense = this.getDeterminant(points[points.length - 2], points[points.length - 1], points[0]) < 0;
+        if (lastSense!=sense) {
+            changes++;
+        }
+        lastSense = sense;
+        sense = this.getDeterminant(points[points.length - 1], points[0], points[1]) < 0;
+        if (lastSense!=sense) {
+            changes++;
+        }
+        
+        return !(changes >= 2);
+    }
 
     triangulatePoly(polygon, triangles) {
         // base case: triangle
@@ -266,5 +295,113 @@ class PolygonOperationHelper {
         sum += (points[0].x - points[points.length - 1].x)*(points[0].y + points[points.length - 1].y)
 
         return sum < 0;
+    }
+
+    getPointIntersection(pointA, pointB, pointC, pointD) {
+        var z1 = (pointA.x - pointB.x);
+        var z2 = (pointC.x - pointD.x);
+        var z3 = (pointA.y - pointB.y);
+        var z4 = (pointC.y - pointD.y);
+        var dist = z1 * z4 - z3 * z2;
+        if (dist == 0) {
+          return null;
+        }
+        var tempA = (pointA.x * pointB.y - pointA.y * pointB.x);
+        var tempB = (pointC.x * pointD.y - pointC.y * pointD.x);
+        var xCoor = (tempA * z2 - z1 * tempB) / dist;
+        var yCoor = (tempA * z4 - z3 * tempB) / dist;
+      
+        if (xCoor < Math.min(pointA.x, pointB.x) || xCoor > Math.max(pointA.x, pointB.x) ||
+          xCoor < Math.min(pointC.x, pointD.x) || xCoor > Math.max(pointC.x, pointD.x)) {
+          return null;
+        }
+        if (yCoor < Math.min(pointA.y, pointB.y) || yCoor > Math.max(pointA.y, pointB.y) ||
+          yCoor < Math.min(pointC.y, pointD.y) || yCoor > Math.max(pointC.y, pointD.y)) {
+          return null;
+        }
+      
+        return new Point(xCoor, yCoor);
+    }
+
+    _samePoint(a, b) {
+        return (a.x === b.x && a.y === b.y);
+    }
+
+    _freeOfIntersection(a, b, c, d) {
+        if (!this._samePoint(c, a) && 
+            !this._samePoint(d, a) &&
+            !this._samePoint(c, b) &&
+            !this._samePoint(d, b)) {
+                
+            if (this.getPointIntersection(a, b, c, d)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    pointInLine(p1, p2, x, y) {
+
+        if ((x === p1.x && y === p1.y) || (x === p2.x && y === p2.y)){
+            return true;
+        }
+
+         // calculate y coordinate for segment 1 on last event x coordinate.
+         let m1 = (p2.y - p1.y)/(p2.x - p1.x);
+         // y = m*x + b
+         let b1 = p1.y - m1 * p1.x;
+         let y1 = m1 * x + b1;
+
+         return Math.abs(y - y1) < 0.1;
+    }
+
+
+
+    _isThereAFreePath(a, b, polygons, pointA) {
+        let freePath = true;
+        polygons.forEach(polygon => {
+            if (freePath) {
+                for (let i = 0; i < polygon.vertices.length - 1; i++) {
+                    if (!this._freeOfIntersection(a, b, polygon.vertices[i], polygon.vertices[i+1])) {
+                        freePath = false;
+                        break;
+                    }
+                }
+                if (!this._freeOfIntersection(a, b, polygon.vertices[polygon.vertices.length - 1], polygon.vertices[0])) {
+                    freePath = false;
+                }
+            }
+        });
+        return freePath;
+    }
+
+    _getVisibility(a, polygonIndex, polygons, pointA) {
+        let visibilityPaths = [];
+        for (let i = 0; i < polygons.length; i++) {
+            if (i !== polygonIndex) {
+                for (let j = 0; j < polygons[i].vertices.length; j++) {
+                    if (this._isThereAFreePath(a, polygons[i].vertices[j], polygons, pointA)) {
+                        visibilityPaths.push(a);
+                        visibilityPaths.push(polygons[i].vertices[j]);
+                    }
+                }
+            }
+        }
+        return visibilityPaths;
+    }
+
+    getVisibilityGraph(polygons, pointA) {
+        let visibilityPaths = [];
+        for (let i = 0; i < polygons.length; i++) {
+            for (let j = 0; j < polygons[i].vertices.length; j++) {
+                let vp = this._getVisibility(polygons[i].vertices[j], i, polygons, pointA);
+                if (vp && vp.length > 0) {
+                    visibilityPaths.push(...vp);
+                }
+            }
+        }
+        let vp = this._getVisibility(pointA, polygons.length + 1 , polygons);
+        visibilityPaths.push(...vp);
+        return visibilityPaths;
     }
 }
