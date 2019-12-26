@@ -1,0 +1,7 @@
+{
+    "name": "Robot Path Planning",
+    "description": "A barebones Node.js app using Express 4",
+    "repository": "https://github.com/joangerard/minkownski-sum",
+    "keywords": ["minkownski", "sum", "computational geometry"],
+    "image": "heroku/nodejs"
+  }
