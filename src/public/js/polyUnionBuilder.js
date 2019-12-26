@@ -28,7 +28,7 @@ class Event {
     }
 }
 
-class Polygon {
+class PolygonUnion {
 
     constructor() {
         this.edges = [];
@@ -432,7 +432,7 @@ class PolyUnionBuilder {
             
             if (!segmentBelongsToSomePoly) {
                 // manage the hypothesis that it is a hole
-                let polygon = new Polygon();
+                let polygon = new PolygonUnion();
                 polygons.type = type;
                 polygon.addEdge(newSegment);
                 polygons.push(polygon);
@@ -450,7 +450,7 @@ class PolyUnionBuilder {
                 polygons.push(newPoly);
             }
         } else {
-            let polygon = new Polygon();
+            let polygon = new PolygonUnion();
             polygons.type = type;
             polygon.addEdge(newSegment);
             polygons.push(polygon);
@@ -587,10 +587,6 @@ class PolyUnionBuilder {
                 let s = this.lineStatus.find(skey);
                 let polyType = INT_POLY;
 
-                if (this.events.size === 0) {
-                    polyType = EXT_POLY;
-                }
-
                 if (!s) {
                     this.lastEvent.point.x -= 0.000001;
                     s = this.lineStatus.find(skey);
@@ -602,6 +598,7 @@ class PolyUnionBuilder {
                 }
 
                 if (s.data.type === EXT_EDGE) {
+                    polyType = EXT_POLY;
                     this._addUnionSegmentFromSegment(s, this.polygons, polyType);
                 }
                 this.lineStatus.remove(skey);
@@ -620,6 +617,7 @@ class PolyUnionBuilder {
                 }
 
                 if (s2.data.type === EXT_EDGE) {
+                    polyType = EXT_POLY;
                     this._addUnionSegmentFromSegment(s2, this.polygons, polyType);
                 }
 

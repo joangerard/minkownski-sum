@@ -24,9 +24,9 @@
 
     <!-- Sidebar -->
     <div class="bg-light border-right" id="sidebar-wrapper">
-      <div class="sidebar-heading">Start Bootstrap </div>
+      <div class="sidebar-heading">Computational Geometry</div>
       <div class="list-group list-group-flush">
-        <a href="#" class="list-group-item list-group-item-action bg-light">Welcome</a>
+        <a href="index.html" class="list-group-item list-group-item-action bg-light">Welcome</a>
         <a href="minkownski-sum.html" class="list-group-item list-group-item-action bg-light">Minkonski Sums</a>
         <a href="union-polygons.html" class="list-group-item list-group-item-action bg-light">Union of Polygons</a>
         <a href="visibility-graph.html" class="list-group-item list-group-item-action bg-light">Visibility Graph</a>
@@ -39,7 +39,48 @@
     <!-- Page Content -->
     <div id="page-content-wrapper">
       <div class="container-fluid">
-        All Together
+          <h3>Instructions</h3>
+          <p>
+            This application shows the final result for finding the shortest path between two points 
+            for a convex or non-convex robot avoiding collision with obstacles.
+            The visibility graph is shown in red, the robot polygon in yellow, the C-Obstacles in blue,
+            and the obstacles in white.
+            <ul>
+              <li>
+                Drag and drop the points in space, they represent the starting and end point.
+              </li>
+              <li>
+                Draw a robot polygon in the blue canvas.
+              </li>
+              <li>
+                Click in the Shortest Path button to see the shortest path between the two points. 
+              </li>
+            </ul>
+          </p>
+        <div class="text-center">
+          
+          <div class="row">
+            <div class="col">
+              <div id="robotPathPlanningApp"></div>
+            </div>
+            <div class="col text-left">
+              <b>Draw your robot polygon below</b>
+              <div id="robotCanvas"></div>
+              
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="vg" checked onclick="robotPathPlanning.showVisibilityGraph();">
+                <label class="custom-control-label" for="vg">Show Visibility Graph</label>
+              </div>
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="ms" checked onclick="robotPathPlanning.showMinkowskiSums();">
+                <label class="custom-control-label" for="ms">Show C-Obstacles</label>
+              </div>
+              <button class="btn btn-info" onclick="execShortestPath()">Shortest Path</button>
+              <button class="btn btn-info" onclick="reset()">Reset</button>
+            </div>
+          </div>
+          
+        </div>
       </div>
     </div>
     <!-- /#page-content-wrapper -->
@@ -48,25 +89,65 @@
   <!-- /#wrapper -->
 
   <!-- Bootstrap core JavaScript -->
+  <script src="/js/application.js"></script>
   <script src="vendor/jquery/jquery.min.js"></script>
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <!-- <script src="https://unpkg.com/avl"></script>
+  <script src="/js/robotPathPlanning.js"></script>
+  <script src="/js/polygon.js"></script>
   <script src="/scripts/pixi.min.js"></script>
-  <script src="/js/triangle.js"></script>
-  <script src="/js/application.js"></script>
   <script src="/js/point.js"></script>
-  <script src="/js/pointEvent.js"></script>
-  <script src="/js/pointEventDeactivated.js"></script>
-  <script src="/js/helperCalculus.js"></script>
-  <script src="/js/inverseGridApplication.js"></script>
   <script src="/js/polygonOperationHelper.js"></script>
-  <script src="/js/minkowskiSumApp.js"></script>
-  <script src="/js/swaplineapp.js"></script>
-  <script src="/js/segment.js"></script>
+  <script src="/js/helperCalculus.js"></script>
+  <script src="/js/dijkstra/PriorityQueue.js"></script>
+  <script src="/js/dijkstra/removeDeepFromMap.js"></script>
+  <script src="/js/dijkstra/toDeepMap.js"></script>
+  <script src="/js/dijkstra/validateDeep.js"></script>
+  <script src="/js/dijkstra/Graph.js"></script>
+  <script src="/js/triangle.js"></script>
   <script src="/js/polyUnionBuilder.js"></script>
-  <script src="/js/polyUnionApp.js"></script> -->
+  <script src="https://unpkg.com/avl"></script>
+  <script src="/js/segment.js"></script>
+  <script src="/js/pointEvent.js"></script>
+
+  <script>
+    let polyOpHelper = new PolygonOperationHelper();
+    let helperCalculus = new HelperCalculus();
+    let width = 900, height = 500;
+    // let robot = [
+    //   new Point(width/2, height/2 - 15),
+    //   new Point(width/2 + 15,height/2),
+    //   new Point(width/2, height/2 + 15),
+    //   new Point(width/2 - 15, height/2)
+    // ];
+    let robot = new GridApplication(PIXI, 160, 160, new PointEvent(), helperCalculus, true, 10, 0x0000ff,'robotCanvas');
+    let robotPathPlanning = new RobotPathPlanning(polyOpHelper, helperCalculus, 'robotPathPlanningApp', robot);
+    let once = true;
+
+    function execShortestPath() {
+        document.getElementById('ms').checked = true;
+        document.getElementById('vg').checked = true;
+        robotPathPlanning.visibilityGraphActive = true;
+        robotPathPlanning.showMinkowskiSumsActive = true;
+        translateRobot(robot.getPoints());
+        robotPathPlanning.execShortestPath(robot.getPoints());
+    }
+
+    function reset() {
+      robotPathPlanning.cleanCanvas();
+      document.getElementById('robotCanvas').innerHTML = "";
+      robot = new GridApplication(PIXI, 160, 160, new PointEvent(), helperCalculus, true, 10, 0x0000ff,'robotCanvas');
+    }
+
+    function translateRobot(robot) {
+      robot.forEach(point => {
+        point.x += width/2 - 80;
+        point.y += height/2 - 80;
+      });
+    }
+  </script>
 
   <!-- Menu Toggle Script -->
+  <script src="/js/load-mathx.js" async></script>
   <script>
     $("#menu-toggle").click(function(e) {
       e.preventDefault();

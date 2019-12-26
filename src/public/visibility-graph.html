@@ -24,7 +24,7 @@
 
     <!-- Sidebar -->
     <div class="bg-light border-right" id="sidebar-wrapper">
-      <div class="sidebar-heading">Start Bootstrap </div>
+      <div class="sidebar-heading">Computational Geometry</div>
       <div class="list-group list-group-flush">
         <a href="index.html" class="list-group-item list-group-item-action bg-light">Welcome</a>
         <a href="minkownski-sum.html" class="list-group-item list-group-item-action bg-light">Minkonski Sums</a>
@@ -59,9 +59,33 @@
           with any other polygon. Thus the time complexity of this algorithm is \(O(n^3)\) where 
           \(n\) is the total number of vertices. Other algorithms can compute the 
           visibility graph in \(O(n^2log n)\) using a rotational 
-          sweep line to verify each vertex visibility.
+          sweep line to verify each vertex visibility. For simplicity reasons the \(O(n^3)\) algorithm 
+          will be used.
         </p>
-        <div id="visibilityGraphApp"></div>
+        <p>
+          Returning to the robot path planning problem, remember that there are two types of representation spaces: a work space and a configuration space.
+          In the work space the polygons represent 
+          the obstacles and the robot (represented by a polygon) is positioned somewhere in the arena 
+          (a plane) and plans to move to a goal position without colliding with any obstacle. However 
+          if the same problem is translated for the configuration space, the obstacles are the Minkownski Sum 
+          of the work-space obstacles and the robot polygon being the later a point in space. 
+          In order to find the shortest path from the start robot position to the goal robot position it 
+          sufices to find the visibility graph between the obstacles and the two points (start and goal) 
+          each edge of a visibility graph is associated with a distance value that represents the cost of 
+          traveling from one point of the edge to another. Using <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijsktra's algorithm </a>
+          is possible to find the shortest path between the initial and the goal points and thus resolving the problem 
+          initially proposed. 
+        </p>
+        <hr class="my-4">
+        <h3>Try it by yourself!</h3>
+        <p>
+          This is an example that shows the visibility graph (red edges) of five polygons
+          in white color and two points. Dijkstra algorithm is used to find the shortest 
+          path between the two points through the visibility graph edges (green path). 
+        </p>
+        <div class="text-center">
+          <div id="visibilityGraphApp"></div>
+        </div>
       </div>
     </div>
     <!-- /#page-content-wrapper -->
@@ -77,6 +101,11 @@
   <script src="/scripts/pixi.min.js"></script>
   <script src="/js/point.js"></script>
   <script src="/js/polygonOperationHelper.js"></script>
+  <script src="/js/dijkstra/PriorityQueue.js"></script>
+  <script src="/js/dijkstra/removeDeepFromMap.js"></script>
+  <script src="/js/dijkstra/toDeepMap.js"></script>
+  <script src="/js/dijkstra/validateDeep.js"></script>
+  <script src="/js/dijkstra/Graph.js"></script>
   <!-- <script src="https://unpkg.com/avl"></script>
 
   <script src="/js/triangle.js"></script>

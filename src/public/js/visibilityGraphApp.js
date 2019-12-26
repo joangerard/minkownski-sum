@@ -10,34 +10,81 @@ class VisibilityGraphApp {
         this.lastPoint = null;
         this.polygonsGraph = new PIXI.Graphics();
         this.pointGraph = new PIXI.Graphics();
+        this.pointGraphB = new PIXI.Graphics();
         this.app.stage.addChild(this.polygonsGraph);
         this.app.stage.addChild(this.pointGraph);
+        this.app.stage.addChild(this.pointGraphB);
         this.point = new Point(30, 30);
+        this.pointB = new Point(870, 30);
+
+        this._addIndexToVertices(this.polygons, this.point, this.pointB);
         
-        this._drawPoint(this.point);
+        this._drawPoint(this.pointGraph, this.point);
+        this._drawPoint(this.pointGraphB, this.pointB);
         this._drawPolygons();
         this._drawVisibilityGraph();
     }
+    _addIndexToVertices(polygons, pointA, pointB) {
+        let id = 0;
+        polygons.forEach(polygon => {
+            polygon.vertices.forEach(vertex => {
+                vertex.id = id;
+                id ++;
+            }) 
+        });
+        pointA.id = id;
+        id ++;
+        pointB.id = id;
+    }
+
+    _getVertexId(polygons, id) {
+        let vertexFound = false;
+        let vertexC;
+        polygons.forEach(polygon => {
+            if (!vertexFound) {
+                polygon.vertices.forEach(vertex => {
+                    if (vertex.id == id) {
+                        vertexC = vertex;
+                        vertexFound = true;
+                    }
+                });
+            }
+        });
+        return vertexC;
+    }
 
     _drawVisibilityGraph() {
-        let vg = this.polyOperationHelper.getVisibilityGraph(this.polygons, this.point);
+        let vg, g, path;
+        [vg, g] = this.polyOperationHelper.getVisibilityGraph(this.polygons, this.point, this.pointB);
+        path = g.path(this.point.id.toString(), this.pointB.id.toString());
         for (let i = 0; i < vg.length; i = i + 2) {
             this._drawLine(vg[i], vg[i+1], 0xff0000);
         }
+
+        let lastVertex = this.point;
+        if (path) {
+            for (let i = 1; i < path.length - 1; i++) {
+                let b = this._getVertexId(this.polygons, path[i]);
+                this._drawLine(lastVertex, b, 0x00ff00);
+                lastVertex = b;
+            }
+            this._drawLine(lastVertex, this.pointB, 0x00ff00);
+        }
+        
     }
 
-    _drawPoint(pos) {
-        this.pointGraph.lineStyle(0);
-        this.pointGraph.beginFill(0xffffff, 1);
-        this.pointGraph.drawCircle(0, 0, 4);
-        this.pointGraph.x = pos.x;
-        this.pointGraph.y = pos.y;
-        this.pointGraph.endFill();
+    _drawPoint(graph, pos) {
+        graph.lineStyle(0);
+        graph.beginFill(0xffffff, 1);
+        graph.drawCircle(0, 0, 4);
+        graph.x = pos.x;
+        graph.y = pos.y;
+        graph.endFill();
     }
 
-    _drawLine(a, b, color=0xffffff) {
+    _drawLine(a, b, color=0xffffff, thickness = 1) {
         this.polygonsGraph.beginFill(color);
-        this.polygonsGraph.lineStyle(2, color, 1);
+        this.polygonsGraph.lineStyle(thickness, color, 1);
         this.polygonsGraph.moveTo(a.x, a.y);
         this.polygonsGraph.lineTo(b.x, b.y);
         this.polygonsGraph.endFill();
@@ -46,9 +93,9 @@ class VisibilityGraphApp {
     _drawPolygons() {
         this.polygons.forEach(polygon => {
             for (let i = 0; i < polygon.vertices.length - 1; i ++) {
-                this._drawLine(polygon.vertices[i], polygon.vertices[i + 1]);
+                this._drawLine(polygon.vertices[i], polygon.vertices[i + 1], 0xffffff, 4);
             }
-            this._drawLine(polygon.vertices[polygon.vertices.length - 1], polygon.vertices[0]);
+            this._drawLine(polygon.vertices[polygon.vertices.length - 1], polygon.vertices[0], 0xffffff, 4);
         });
     }
 
@@ -73,13 +120,14 @@ class VisibilityGraphApp {
         }
 
 
-        this.point = new Point(pos.x, pos.y);
+        this.point.x = pos.x;
+        this.point.y = pos.y;
 
         this.pointGraph.clear();
         this.polygonsGraph.clear();
         this._drawPolygons();
-        this._drawPoint(pos);
 
+        this._drawPoint(this.pointGraph, pos);
         this._drawVisibilityGraph();
     }
 

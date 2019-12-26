@@ -355,9 +355,7 @@ class PolygonOperationHelper {
          return Math.abs(y - y1) < 0.1;
     }
 
-
-
-    _isThereAFreePath(a, b, polygons, pointA) {
+    _isThereAFreePath(a, b, polygons) {
         let freePath = true;
         polygons.forEach(polygon => {
             if (freePath) {
@@ -375,33 +373,111 @@ class PolygonOperationHelper {
         return freePath;
     }
 
-    _getVisibility(a, polygonIndex, polygons, pointA) {
+    _distance(a, b){
+        return Math.sqrt( Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2) );
+    }
+
+    _connectedExterior(a, b, vertices) {
+        let countLeft = 0, countRight = 0;
+        
+        vertices.forEach(vertex => {
+            if (vertex.id !== a.id && vertex.id !== b.id) {
+                if (this.getDeterminant(a, b, vertex) > 0) {
+                    countLeft++;
+                } else {
+                    countRight++;
+                }
+            }
+        });
+
+        return (countLeft === 0 || countRight === 0);
+    }
+
+    _getVisibility(a, polygonIndex, polygons) {
         let visibilityPaths = [];
+        let connections = {};
         for (let i = 0; i < polygons.length; i++) {
             if (i !== polygonIndex) {
                 for (let j = 0; j < polygons[i].vertices.length; j++) {
-                    if (this._isThereAFreePath(a, polygons[i].vertices[j], polygons, pointA)) {
+                    if (this._isThereAFreePath(a, polygons[i].vertices[j], polygons)) {
+                        let b = polygons[i].vertices[j];
                         visibilityPaths.push(a);
-                        visibilityPaths.push(polygons[i].vertices[j]);
+                        visibilityPaths.push(b);
+                        connections[b.id] = this._distance(a, b);
+                    }
+                }
+            }
+            else {
+                for (let j = 0; j < polygons[i].vertices.length; j++) {
+                    if (polygons[i].vertices[j].id !== a.id) {
+                        if (this._connectedExterior(a, polygons[i].vertices[j], polygons[i].vertices)) {
+                            let b = polygons[i].vertices[j];
+                            visibilityPaths.push(a);
+                            visibilityPaths.push(b);
+                            connections[b.id] = this._distance(a, b);
+                        }
                     }
                 }
             }
         }
-        return visibilityPaths;
+        return [visibilityPaths, connections];
     }
 
-    getVisibilityGraph(polygons, pointA) {
+    _isInConnections(vertex, connections) {
+        let found = false;
+
+        Object.keys(connections).forEach(id => {
+            if (vertex.id == id) {
+                found = true;
+            }
+        });
+        
+        return found;
+    }
+
+    getVisibilityGraph(polygons, pointA, pointB) {
         let visibilityPaths = [];
+        let g = new Graph();
+        let vp, connections, connectionsB;
+
+        // PointB vs Polygons
+        [vp, connectionsB] = this._getVisibility(pointB, polygons.length + 1 , polygons);
+        visibilityPaths.push(...vp);
+        g.addNode(pointB.id.toString(), connectionsB);
+
+        // Polygons vs Polygons
         for (let i = 0; i < polygons.length; i++) {
             for (let j = 0; j < polygons[i].vertices.length; j++) {
-                let vp = this._getVisibility(polygons[i].vertices[j], i, polygons, pointA);
+                
+                let a = polygons[i].vertices[j];
+                [vp, connections] = this._getVisibility(a, i, polygons);
                 if (vp && vp.length > 0) {
+                    if (this._isInConnections(a, connectionsB)) {
+                        connections[pointB.id] = this._distance(a, pointB);
+                    }
+                    g.addNode(a.id.toString(), connections);
                     visibilityPaths.push(...vp);
                 }
             }
         }
-        let vp = this._getVisibility(pointA, polygons.length + 1 , polygons);
+
+        // PointA vs Polygons
+        [vp, connections] = this._getVisibility(pointA, polygons.length + 1 , polygons);
         visibilityPaths.push(...vp);
-        return visibilityPaths;
+
+
+        // PointA vs PointB
+        if (this._isThereAFreePath(pointA, pointB, polygons)) {
+            visibilityPaths.push(pointA);
+            visibilityPaths.push(pointB);
+            connections[pointB.id] = this._distance(pointA, pointB);
+        }
+
+        g.addNode(pointA.id.toString(), connections);
+
+        
+
+        return [visibilityPaths, g];
     }
+    
 }
