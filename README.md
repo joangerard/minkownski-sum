@@ -6,14 +6,14 @@ collision with objects.
 
 It uses the divide and conquer technique to split the problem into subproblems: 
 Minkowski Sums for simple polygons, Union of polygons, construction of the 
-Visibility Graph and a sample application that resumes all this concepts.
+Visibility Graph and a sample application that resumes all these concepts.
 
 This project was developed using plain javascript together with the 
 PIXI.js library to design the interaction samples. 
 
 This application was deployed [here](https://minkowski-sum.herokuapp.com/minkownski-sum.html).
 
-To run this application locally install type:
+To run this application locally type:
 
 ```
 npm install
