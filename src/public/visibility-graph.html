@@ -41,9 +41,6 @@
       <div class="container-fluid">
         <h1>Visibility Graph</h1>
         <p>
-          Polygons and obstacles will be treated equally.
-        </p>
-        <p>
           A vertex \(p_1\) that belongs to a polygon \(P\) is visible from vertex 
           \(q_1\) that belongs to a polygon \(Q\) if the open segment going from \(p_1\) 
           to \(q_1\) does not intersect with any other edge.
@@ -68,7 +65,7 @@
           the obstacles and the robot (represented by a polygon) is positioned somewhere in the arena 
           (a plane) and plans to move to a goal position without colliding with any obstacle. However 
           if the same problem is translated for the configuration space, the obstacles are the Minkownski Sum 
-          of the work-space obstacles and the robot polygon being the later a point in space. 
+          of the work-space obstacles and the robot polygon, being the later a point in space. 
           In order to find the shortest path from the start robot position to the goal robot position it 
           sufices to find the visibility graph between the obstacles and the two points (start and goal) 
           each edge of a visibility graph is associated with a distance value that represents the cost of 

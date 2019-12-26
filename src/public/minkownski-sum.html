@@ -55,7 +55,7 @@
         reference point and he slides the robot around an object without separating it. 
         The figure drawn by the pen represents the \(C\)-obstacle. The figure below shows
         the work space obstacle object colored green,
-        the robot colored green and the \(CP\) obstacle colored red.
+        the robot colored blue and the \(CP\) obstacle colored red.
         </p>
         <div id="polyResult2" class="text-center"></div>
         
@@ -72,14 +72,14 @@
         Where \(a\) + \(b\) are the vertor sum of two vectors. Therefore if \(a = (a_x, b_x) \) and 
         \( b = (b_x, b_y)\) then \(a+b := (a_x + b_x, a_y + b_y) \)
         If we select a point \(c\) and we apply the Minkowski Sum between that point 
-        and a set \(B\) the result will be the set \(B\) translated by x. Then in other words
+        and a set \(B\) the result will be the set \(B\) translated by \(c\). Then in other words
         \(A \oplus B = \bigcup_{a \in A} (a \oplus B) \) is the union of all the resulting
-        copies of B translated by \(x \in A\).
+        copies of B translated by \(a \in A\).
 
         </p>
 
         <p>
-        For a point \(r:=(r_x, r_y)\) there exists its <b>reflecting value</b> defined to be \(-r:=-r_x,-r_y\).
+        For a point \(r:=(r_x, r_y)\) there exists its <b>reflecting value</b> defined to be \(-r:=(-r_x,-r_y)\).
         Thus a reflecting polygon of \(R\) is defined as \(-R:= \{ -r : r \in R\} \).
         </p>
 
@@ -90,22 +90,20 @@
         \(P \oplus -R(r_x,r_y) \).
         </p>
         <p>
-            First if \(R\) is translated so that \(r\) is strictly inside the \(C\)-obstacle it means that 
-            \(R\) goes through obstacle \(P\) thus \(R \cap P \neq \emptyset \). Second if \(R\) is translated
-            so that \(r\) lies on the boundary of \(C\)-obstacle then the boundary of \(R\) touches the boundary 
-            of \(P\). Finally if \(R\) is translated so that \(r\) is strictly exterior to the \(C\)-obstacle 
-            then R and P does not touch each other thus \(R \cap P = \emptyset \).
-        </p>
-
-
-        <p>
             <a class="btn btn-info" data-toggle="collapse" href="#theorem1" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">Show Proof</a>
         </p>
+        
         <div class="row">
             <div class="col">
                 <div class="collapse multi-collapse" id="theorem1">
                 <div class="jumbotron">
-
+                    <p>
+                        First if \(R\) is translated so that \(r\) is strictly inside the \(C\)-obstacle it means that 
+                        \(R\) goes through obstacle \(P\) thus \(R \cap P \neq \emptyset \). Second if \(R\) is translated
+                        so that \(r\) lies on the boundary of \(C\)-obstacle then the boundary of \(R\) touches the boundary 
+                        of \(P\). Finally if \(R\) is translated so that \(r\) is strictly exterior to the \(C\)-obstacle 
+                        then R and P does not touch each other thus \(R \cap P = \emptyset \).
+                    </p>
                     <p>
                         \(\Rightarrow\)
                         If \(R(x,y)\) intersects \(P\) then \((x,y) \in P \oplus (-R(0,0))\). <br/>
@@ -204,7 +202,7 @@
                 automatically to the current point. Thus drawing the boundary of the polygon.
             </li>
             <li>
-                Adjust the points dragging and dropping it.
+                Adjust the points dragging and dropping them.
             </li>
             <li>
                 Once you set up the two polygons click on the "Get Minkowski Sum" button.
@@ -482,7 +480,7 @@
                     </p>
                     <p>
                         This algorithm runs in linear time because at each repetition it increases either \(i\) 
-                        or \(j\) until it has visited all the vertex of \(S1\) and \(S2\). The algorithm has an elegant way to avoid 
+                        or \(j\) until it has visited all the vertices of \(S1\) and \(S2\). The algorithm has an elegant way to avoid 
                         <b>if</b> conditions in order to include the
                         cyclic structure of the relation between the last and the first vertex of a polygon as part of the verification process. 
                         The function \(angle(a, b)\) calculates the angle between \(a\) and \(b\) using the x-axis on \(a\) as a
@@ -510,7 +508,7 @@
             <div>
                 <h3>Minkownski Sum for Non-convex Polygons</h3>
                 <p>
-                    The Minkowski Sum has the property to be distributive. More formally:
+                    The Minkowski Sum are distributive. More formally:
                     given three sets \(S_1, S_2, S_3\), we have
                     \(S_1 \oplus (S_2 \cup S_3) = (S_1 \oplus S_2) \cup (S_1 \oplus S_3)\).
                 </p>
